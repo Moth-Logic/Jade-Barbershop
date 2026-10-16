@@ -1,0 +1,844 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>UML Barbería</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #f8f7f5;
+  --fg: #1a1a1a;
+  --surface: #ffffff;
+  --surface-alt: #f0eeeb;
+  --border: #d4d0ca;
+  --border-strong: #a09a90;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --pkg-logica: #059669;
+  --pkg-logica-bg: #ecfdf5;
+  --pkg-logica-border: #a7f3d0;
+  --pkg-control: #7c3aed;
+  --pkg-control-bg: #f5f3ff;
+  --pkg-control-border: #c4b5fd;
+  --relation: #64748b;
+  --relation-text: #475569;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151518;
+    --fg: #e4e4e7;
+    --surface: #1e1e22;
+    --surface-alt: #27272b;
+    --border: #3f3f46;
+    --border-strong: #71717a;
+    --accent: #60a5fa;
+    --accent-light: #1e3a5f;
+    --pkg-logica: #34d399;
+    --pkg-logica-bg: #0d2818;
+    --pkg-logica-border: #065f46;
+    --pkg-control: #a78bfa;
+    --pkg-control-bg: #1a1028;
+    --pkg-control-border: #4c1d95;
+    --relation: #94a3b8;
+    --relation-text: #cbd5e1;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151518;
+  --fg: #e4e4e7;
+  --surface: #1e1e22;
+  --surface-alt: #27272b;
+  --border: #3f3f46;
+  --border-strong: #71717a;
+  --accent: #60a5fa;
+  --accent-light: #1e3a5f;
+  --pkg-logica: #34d399;
+  --pkg-logica-bg: #0d2818;
+  --pkg-logica-border: #065f46;
+  --pkg-control: #a78bfa;
+  --pkg-control-bg: #1a1028;
+  --pkg-control-border: #4c1d95;
+  --relation: #94a3b8;
+  --relation-text: #cbd5e1;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  height: 100%;
+  overflow: hidden;
+}
+html { height: 100%; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  background: var(--bg);
+  z-index: 100;
+}
+.toolbar h1 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-right: auto;
+}
+.toolbar .legend {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.legend-dot.logica { background: var(--pkg-logica); }
+.legend-dot.control { background: var(--pkg-control); }
+
+.toolbar button {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+.toolbar button:hover { border-color: var(--border-strong); }
+
+.canvas-wrap {
+  position: relative;
+  flex: 1;
+  height: calc(100% - 52px);
+  overflow: hidden;
+  cursor: grab;
+}
+.canvas-wrap.grabbing { cursor: grabbing; }
+
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6000px;
+  height: 4000px;
+  transform-origin: 0 0;
+}
+
+svg.relations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+svg.relations line, svg.relations path {
+  stroke: var(--relation);
+  stroke-width: 1.5;
+  fill: none;
+}
+svg.relations polygon {
+  fill: var(--relation);
+  stroke: none;
+}
+svg.relations text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--relation-text);
+}
+
+.uml-class {
+  position: absolute;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  min-width: 220px;
+  z-index: 10;
+  cursor: move;
+  user-select: none;
+  transition: box-shadow 0.15s;
+}
+.uml-class:hover { box-shadow: var(--shadow-hover); }
+.uml-class.dragging {
+  box-shadow: var(--shadow-hover);
+  z-index: 50;
+  opacity: 0.95;
+}
+
+.uml-class.pkg-logica {
+  border-color: var(--pkg-logica-border);
+}
+.uml-class.pkg-logica .class-header {
+  background: var(--pkg-logica-bg);
+  border-bottom-color: var(--pkg-logica-border);
+}
+.uml-class.pkg-logica .class-name { color: var(--pkg-logica); }
+
+.uml-class.pkg-control {
+  border-color: var(--pkg-control-border);
+}
+.uml-class.pkg-control .class-header {
+  background: var(--pkg-control-bg);
+  border-bottom-color: var(--pkg-control-border);
+}
+.uml-class.pkg-control .class-name { color: var(--pkg-control); }
+
+.class-header {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.class-stereotype {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  text-align: center;
+}
+.class-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+.class-pkg {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-align: center;
+  opacity: 0.5;
+}
+
+.class-section {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.class-section:last-child { border-bottom: none; }
+.class-section .attr { display: block; white-space: nowrap; }
+.class-section .vis { opacity: 0.5; margin-right: 2px; }
+.class-section .type { opacity: 0.65; }
+
+.class-section[contenteditable="true"] {
+  outline: none;
+  cursor: text;
+}
+.class-section[contenteditable="true"]:focus {
+  background: var(--accent-light);
+}
+
+.zoom-controls {
+  position: fixed;
+  bottom: 16px;
+  right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  gap: 4px;
+  z-index: 200;
+}
+.zoom-controls button {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+}
+.zoom-controls button:hover { border-color: var(--border-strong); }
+.zoom-label {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 8px;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+  min-width: 44px;
+}
+
+.edit-hint {
+  position: fixed;
+  bottom: 16px;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  font-size: 11px;
+  color: var(--border-strong);
+  z-index: 200;
+  background: var(--surface);
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* ===== Capa visual v3 ===== */
+:root {
+  --bg: #f6f4f0; --fg: #23201d; --surface: #fffefc; --surface-alt: #efebe5;
+  --border: #ddd6cc; --border-strong: #9a9186;
+  --accent: #2f5d8a; --accent-light: #e3edf6;
+  --pkg-logica: #1f6f66; --pkg-logica-bg: #e8f3f1; --pkg-logica-border: #b5d6d1;
+  --pkg-control: #9c2f3b; --pkg-control-bg: #f8ebec; --pkg-control-border: #e2b9bd;
+  --relation: #7d756b; --relation-text: #4d463f;
+  --dot: #d9d3c8;
+  --shadow: 0 1px 2px rgba(35,32,29,.06), 0 4px 14px rgba(35,32,29,.06);
+  --shadow-hover: 0 2px 4px rgba(35,32,29,.08), 0 10px 26px rgba(35,32,29,.12);
+  --font-ui: 'DM Sans', system-ui, sans-serif;
+  --font-title: 'Fraunces', Georgia, serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171514; --fg: #ece7e1; --surface: #211e1c; --surface-alt: #2b2724;
+    --border: #3b3631; --border-strong: #8a8176;
+    --accent: #8fb7dd; --accent-light: #22364a;
+    --pkg-logica: #6fc7bb; --pkg-logica-bg: #17302d; --pkg-logica-border: #2b5a54;
+    --pkg-control: #e58892; --pkg-control-bg: #38191d; --pkg-control-border: #6e2d36;
+    --relation: #9b9288; --relation-text: #cfc7bd; --dot: #2c2825;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171514; --fg: #ece7e1; --surface: #211e1c; --surface-alt: #2b2724;
+  --border: #3b3631; --border-strong: #8a8176;
+  --accent: #8fb7dd; --accent-light: #22364a;
+  --pkg-logica: #6fc7bb; --pkg-logica-bg: #17302d; --pkg-logica-border: #2b5a54;
+  --pkg-control: #e58892; --pkg-control-bg: #38191d; --pkg-control-border: #6e2d36;
+  --relation: #9b9288; --relation-text: #cfc7bd; --dot: #2c2825;
+}
+body { font-family: var(--font-ui); }
+.toolbar { position: relative; padding: 12px 0 14px; border-bottom: none; }
+.toolbar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; border-radius: 3px;
+  background: repeating-linear-gradient(-45deg, #b5434f 0 10px, #f3efe8 10px 20px, #2f5d8a 20px 30px, #f3efe8 30px 40px);
+  opacity: .8;
+}
+.toolbar h1 { font-family: var(--font-title); font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+.toolbar h1 span { font-family: var(--font-ui); font-size: 12px; font-weight: 500; color: var(--border-strong); margin-left: 10px; letter-spacing: 0; }
+.toolbar button { border-radius: 8px; padding: 6px 14px; transition: background .15s, border-color .15s; }
+.toolbar button:hover { background: var(--surface-alt); }
+.toolbar button:focus-visible, .zoom-controls button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.canvas-wrap { background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 24px 24px; }
+.uml-class { border-width: 1px; min-width: 240px; overflow: hidden; }
+.uml-class.pkg-logica { border-top: 3px solid var(--pkg-logica); }
+.uml-class.pkg-control { border-top: 3px solid var(--pkg-control); }
+.class-header { padding: 9px 12px 8px; border-radius: 0; }
+.class-name { font-size: 14px; }
+.class-section { padding: 8px 12px; font-size: 11.5px; line-height: 1.7; }
+
+svg.relations line, svg.relations path { stroke-width: 1.6; }
+svg.relations text { font-size: 11px; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
+.zoom-controls button, .zoom-label, .edit-hint { border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<div class="toolbar">
+  <h1>Barbería <span>Diagrama de clases</span></h1>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot logica"></span> logica</span>
+    <span class="legend-item"><span class="legend-dot control"></span> control</span>
+  </div>
+  <button onclick="resetLayout()">Reiniciar</button>
+</div>
+
+<div class="canvas-wrap" id="canvasWrap">
+  <div class="canvas" id="canvas">
+    <svg class="relations" id="svg"></svg>
+  </div>
+</div>
+
+<div class="zoom-controls">
+  <button onclick="zoomBy(-0.1)">−</button>
+  <div class="zoom-label" id="zoomLabel">100%</div>
+  <button onclick="zoomBy(0.1)">+</button>
+</div>
+<div class="edit-hint">Doble clic para editar. Arrastra para mover.</div>
+
+<script>
+const classes = [
+  {
+    id: 'Cliente', pkg: 'logica', stereotype: '',
+    x: 60, y: 60,
+    attrs: [
+      '- email: String {PK}',
+      '- nombreCompleto: String',
+      '- telefono: String',
+      '- email: String'
+    ],
+    methods: [
+      '+ getId(): String',
+      '+ getNombreCompleto(): String',
+      '+ getTelefono(): String',
+      '+ getEmail(): String',
+      '+ setNombreCompleto(n: String): void',
+      '+ setTelefono(t: String): void',
+      '+ setEmail(e: String): void',
+      '+ toString(): String'
+    ]
+  },
+  {
+    id: 'Cita', pkg: 'logica', stereotype: '',
+    x: 60, y: 420,
+    attrs: [
+      '- email: String {PK}',
+      '- fecha: LocalDate',
+      '- hora: int',
+      '- confirmada: boolean'
+    ],
+    methods: [
+      '+ getId(): String',
+      '+ getFecha(): LocalDate',
+      '+ getHora(): int',
+      '+ isConfirmada(): boolean',
+      '+ setFecha(f: LocalDate): void',
+      '+ setHora(h: int): void',
+      '+ confirmar(): void',
+      '+ toString(): String'
+    ]
+  },
+  {
+    id: 'HorarioAtencion', pkg: 'logica', stereotype: '',
+    x: 60, y: 780,
+    attrs: [
+      '- abierto: boolean[7]',
+      '- horaInicio: int[7]',
+      '- horaFin: int[7]'
+    ],
+    methods: [
+      '+ setDia(dia: int, abierto: boolean, inicio: int, fin: int): void',
+      '+ isDiaAbierto(dia: int): boolean',
+      '+ getHoraInicio(dia: int): int',
+      '+ getHoraFin(dia: int): int',
+      '+ estaDisponible(dia: int, hora: int): boolean',
+      '+ toString(): String'
+    ]
+  },
+  {
+    id: 'TipoServicio', pkg: 'logica', stereotype: '',
+    x: 350, y: 780,
+    attrs: ['- id: String', '- nombre: String', '- descripcion: String', '- precio: double', '- duracionMinutos: int'],
+    methods: ['+ getId(): String', '+ getNombre(): String', '+ getDescripcion(): String', '+ getPrecio(): double', '+ setNombre(nombre: String): void', '+ setDescripcion(descripcion: String): void', '+ setPrecio(precio: double): void', '+ toString(): String']
+  },  {
+    id: 'Barberia', pkg: 'control', stereotype: '',
+    x: 560, y: 60,
+    attrs: [
+      '- nombre: String'
+    ],
+    methods: [
+      '+ crearCliente(nombreCompleto: String, tel: String, email: String): String',
+      '+ modificarCliente(email: String, nombreCompleto: String, tel: String): String',
+      '+ borrarCliente(email: String): String',
+      '+ consultarCliente(email: String): String',
+      '+ listarClientes(): ArrayList<String[]>',
+      '+ crearCita(fecha: String, hora: int, emailCliente: String, idTipoServicio: String): String',
+      '+ modificarCita(id: String, fecha: String, hora: int, emailCliente: String, idTipoServicio: String): String',
+      '+ borrarCita(id: String): String',
+      '+ consultarCita(id: String): String',
+      '+ confirmarCita(id: String): String',
+      '+ listarCitas(): ArrayList<String[]>',
+      '+ getCitasPorFecha(fecha: String): ArrayList<String[]>',
+      '+ getCitasSemana(fechaInicio: LocalDate): ArrayList<String[]>',
+      '+ getCitasMes(fechaInicio: LocalDate): ArrayList<String[]>',
+      '+ crearTipoServicio(nombre: String, descripcion: String, precio: double, duracionMinutos: int): String',
+      '+ modificarTipoServicio(id: String, nombre: String, descripcion: String, precio: double, duracionMinutos: int): String',
+      '+ borrarTipoServicio(id: String): String',
+      '+ consultarTipoServicio(id: String): String',
+      '+ listarTiposServicio(): ArrayList<String[]>',
+      '+ agregarAListaEspera(idCliente: String): String',
+      '+ eliminarDeListaEspera(idCliente: String): String',
+      '+ mostrarListaEspera(): ArrayList<String[]>',
+      '+ setHorario(dia: int, abierto: boolean, inicio: int, fin: int): void',
+      '+ enviarConfirmacion(idCita: String): String',
+      '+ enviarRecordatorio(idCita: String): String',
+      '+ guardar(): void',
+      '+ cargar(): void'
+    ]
+  }
+]
+
+const relations = [
+  { from: 'Barberia', to: 'Cliente', type: 'composition', labelFrom: '1', labelTo: '*', name: 'clientes' },
+  { from: 'Barberia', to: 'Cita', type: 'composition', labelFrom: '1', labelTo: '*', name: 'citas' },
+  { from: 'Barberia', to: 'HorarioAtencion', type: 'composition', labelFrom: '1', labelTo: '1', name: 'horario' },
+  { from: 'Barberia', to: 'Cliente', type: 'association', labelFrom: '1', labelTo: '*', name: 'listaEspera (ordenada)', offset: 40 },
+  { from: 'Cita', to: 'Cliente', type: 'association', labelFrom: '*', labelTo: '1', name: 'cliente' },
+  { from: 'Cita', to: 'TipoServicio', type: 'association', labelFrom: '*', labelTo: '1', name: 'tipoServicio' },
+]
+
+const wrap = document.getElementById('canvasWrap')
+const canvas = document.getElementById('canvas')
+const svg = document.getElementById('svg')
+let scale = 1
+let panX = 0, panY = 0
+let classElements = {}
+
+function renderClasses() {
+  canvas.querySelectorAll('.uml-class').forEach(el => el.remove())
+  classElements = {}
+  classes.forEach(cls => {
+    const el = document.createElement('div')
+    el.className = `uml-class pkg-${cls.pkg}`
+    el.style.left = cls.x + 'px'
+    el.style.top = cls.y + 'px'
+    el.dataset.id = cls.id
+
+    const stereo = cls.stereotype ? `<div class="class-stereotype">&laquo;${cls.stereotype}&raquo;</div>` : ''
+    const attrsHtml = cls.attrs.length > 0
+      ? cls.attrs.map(a => `<span class="attr">${fmtAttr(a)}</span>`).join('')
+      : '<span class="attr" style="opacity:0.4">(sin atributos)</span>'
+
+    el.innerHTML = `
+      <div class="class-header">
+        ${stereo}
+        <div class="class-name">${cls.id}</div>
+        <div class="class-pkg">${cls.pkg}</div>
+      </div>
+      <div class="class-section" contenteditable="true" data-section="attrs">${attrsHtml}</div>
+      <div class="class-section" contenteditable="true" data-section="methods">${cls.methods.map(m => `<span class="attr">${fmtAttr(m)}</span>`).join('')}</div>
+    `
+    canvas.appendChild(el)
+    classElements[cls.id] = el
+    makeDraggable(el, cls)
+  })
+}
+
+function fmtAttr(s) {
+  let vis = ''
+  let rest = s
+  if (s.startsWith('+ ')) { vis = '+'; rest = s.slice(2) }
+  else if (s.startsWith('- ')) { vis = '-'; rest = s.slice(2) }
+  else if (s.startsWith('# ')) { vis = '#'; rest = s.slice(2) }
+
+  const colonIdx = rest.lastIndexOf(':')
+  if (colonIdx > -1) {
+    const name = rest.slice(0, colonIdx)
+    const type = rest.slice(colonIdx)
+    return `<span class="vis">${vis}</span>${esc(name)}<span class="type">${esc(type)}</span>`
+  }
+  return `<span class="vis">${vis}</span>${esc(rest)}`
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+function makeDraggable(el, cls) {
+  let startX, startY, origX, origY
+
+  el.addEventListener('mousedown', e => {
+    if (e.target.closest('[contenteditable]') && document.activeElement === e.target.closest('[contenteditable]')) return
+    e.preventDefault()
+    el.classList.add('dragging')
+    startX = e.clientX
+    startY = e.clientY
+    origX = cls.x
+    origY = cls.y
+
+    function onMove(ev) {
+      cls.x = origX + (ev.clientX - startX) / scale
+      cls.y = origY + (ev.clientY - startY) / scale
+      el.style.left = cls.x + 'px'
+      el.style.top = cls.y + 'px'
+      drawRelations()
+    }
+    function onUp() {
+      el.classList.remove('dragging')
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      savePositions()
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  })
+
+  el.addEventListener('touchstart', e => {
+    if (e.target.closest('[contenteditable]') && document.activeElement === e.target.closest('[contenteditable]')) return
+    if (e.touches.length !== 1) return
+    const t = e.touches[0]
+    el.classList.add('dragging')
+    startX = t.clientX
+    startY = t.clientY
+    origX = cls.x
+    origY = cls.y
+
+    function onMove(ev) {
+      ev.preventDefault()
+      const tt = ev.touches[0]
+      cls.x = origX + (tt.clientX - startX) / scale
+      cls.y = origY + (tt.clientY - startY) / scale
+      el.style.left = cls.x + 'px'
+      el.style.top = cls.y + 'px'
+      drawRelations()
+    }
+    function onUp() {
+      el.classList.remove('dragging')
+      document.removeEventListener('touchmove', onMove)
+      document.removeEventListener('touchend', onUp)
+    }
+    document.addEventListener('touchmove', onMove, { passive: false })
+    document.addEventListener('touchend', onUp)
+  }, { passive: false })
+}
+
+function getCenter(id) {
+  const el = classElements[id]
+  if (!el) return { x: 0, y: 0 }
+  const cls = classes.find(c => c.id === id)
+  const w = el.offsetWidth
+  const h = el.offsetHeight
+  return { x: cls.x + w / 2, y: cls.y + h / 2 }
+}
+
+function getEdgePoint(id, targetX, targetY) {
+  const el = classElements[id]
+  const cls = classes.find(c => c.id === id)
+  if (!el || !cls) return { x: 0, y: 0 }
+  const w = el.offsetWidth
+  const h = el.offsetHeight
+  const cx = cls.x + w / 2
+  const cy = cls.y + h / 2
+  const dx = targetX - cx
+  const dy = targetY - cy
+  if (dx === 0 && dy === 0) return { x: cx, y: cy }
+
+  const absDx = Math.abs(dx)
+  const absDy = Math.abs(dy)
+  let ex, ey
+
+  if (absDx * h > absDy * w) {
+    ex = dx > 0 ? cls.x + w : cls.x
+    ey = cy + dy * (ex - cx) / dx
+  } else {
+    ey = dy > 0 ? cls.y + h : cls.y
+    ex = cx + dx * (ey - cy) / dy
+  }
+  return { x: ex, y: ey }
+}
+
+function drawRelations() {
+  svg.innerHTML = ''
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+
+  const markerComp = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+  markerComp.setAttribute('id', 'diamond')
+  markerComp.setAttribute('viewBox', '0 0 12 8')
+  markerComp.setAttribute('refX', '0')
+  markerComp.setAttribute('refY', '4')
+  markerComp.setAttribute('markerWidth', '12')
+  markerComp.setAttribute('markerHeight', '8')
+  markerComp.setAttribute('orient', 'auto')
+  const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+  poly.setAttribute('points', '0,4 6,0 12,4 6,8')
+  markerComp.appendChild(poly)
+  defs.appendChild(markerComp)
+
+  const markerArrow = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+  markerArrow.setAttribute('id', 'arrow')
+  markerArrow.setAttribute('viewBox', '0 0 10 10')
+  markerArrow.setAttribute('refX', '10')
+  markerArrow.setAttribute('refY', '5')
+  markerArrow.setAttribute('markerWidth', '8')
+  markerArrow.setAttribute('markerHeight', '8')
+  markerArrow.setAttribute('orient', 'auto')
+  const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  arrowPath.setAttribute('d', 'M0,0 L10,5 L0,10')
+  arrowPath.setAttribute('fill', 'none')
+  arrowPath.setAttribute('stroke', 'var(--relation)')
+  arrowPath.setAttribute('stroke-width', '1.5')
+  markerArrow.appendChild(arrowPath)
+  defs.appendChild(markerArrow)
+
+  svg.appendChild(defs)
+
+  relations.forEach(rel => {
+    const off = rel.offset || 0
+    const fromC = getCenter(rel.from)
+    const toC = getCenter(rel.to)
+
+    const tX = toC.x + off
+    const tY = toC.y + off
+    const fX = fromC.x + off
+    const fY = fromC.y + off
+
+    const fromP = getEdgePoint(rel.from, tX, tY)
+    const toP = getEdgePoint(rel.to, fX, fY)
+
+    if (off !== 0) {
+      fromP.x += off * 0.3
+      fromP.y += off * 0.3
+      toP.x += off * 0.3
+      toP.y += off * 0.3
+    }
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    line.setAttribute('x1', fromP.x)
+    line.setAttribute('y1', fromP.y)
+    line.setAttribute('x2', toP.x)
+    line.setAttribute('y2', toP.y)
+
+    if (rel.type === 'composition') {
+      line.setAttribute('marker-start', 'url(#diamond)')
+    } else if (rel.type === 'dependency') {
+      line.setAttribute('stroke-dasharray', '6,4')
+      line.setAttribute('marker-end', 'url(#arrow)')
+    }
+
+    svg.appendChild(line)
+
+    const mx = (fromP.x + toP.x) / 2
+    const my = (fromP.y + toP.y) / 2
+
+    if (rel.name) {
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      txt.setAttribute('x', mx)
+      txt.setAttribute('y', my - 6)
+      txt.setAttribute('text-anchor', 'middle')
+      txt.textContent = rel.name
+      svg.appendChild(txt)
+    }
+
+    if (rel.labelFrom) {
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      lbl.setAttribute('x', fromP.x + (toP.x - fromP.x) * 0.12)
+      lbl.setAttribute('y', fromP.y + (toP.y - fromP.y) * 0.12 + 14)
+      lbl.setAttribute('text-anchor', 'middle')
+      lbl.setAttribute('font-weight', '600')
+      lbl.textContent = rel.labelFrom
+      svg.appendChild(lbl)
+    }
+    if (rel.labelTo) {
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      lbl.setAttribute('x', toP.x - (toP.x - fromP.x) * 0.12)
+      lbl.setAttribute('y', toP.y - (toP.y - fromP.y) * 0.12 + 14)
+      lbl.setAttribute('text-anchor', 'middle')
+      lbl.setAttribute('font-weight', '600')
+      lbl.textContent = rel.labelTo
+      svg.appendChild(lbl)
+    }
+  })
+}
+
+let isPanning = false, panStartX, panStartY, panOrigX, panOrigY
+wrap.addEventListener('mousedown', e => {
+  if (e.target.closest('.uml-class')) return
+  isPanning = true
+  wrap.classList.add('grabbing')
+  panStartX = e.clientX
+  panStartY = e.clientY
+  panOrigX = panX
+  panOrigY = panY
+})
+document.addEventListener('mousemove', e => {
+  if (!isPanning) return
+  panX = panOrigX + (e.clientX - panStartX)
+  panY = panOrigY + (e.clientY - panStartY)
+  updateTransform()
+})
+document.addEventListener('mouseup', () => {
+  isPanning = false
+  wrap.classList.remove('grabbing')
+})
+
+wrap.addEventListener('wheel', e => {
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -0.08 : 0.08
+  zoomBy(delta, e.clientX, e.clientY)
+}, { passive: false })
+
+function zoomBy(delta, cx, cy) {
+  const old = scale
+  scale = Math.max(0.2, Math.min(2, scale + delta))
+  if (cx !== undefined) {
+    const rect = wrap.getBoundingClientRect()
+    const ox = cx - rect.left
+    const oy = cy - rect.top
+    panX = ox - (ox - panX) * (scale / old)
+    panY = oy - (oy - panY) * (scale / old)
+  }
+  updateTransform()
+  document.getElementById('zoomLabel').textContent = Math.round(scale * 100) + '%'
+}
+
+function updateTransform() {
+  canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`
+}
+
+function savePositions() {
+  try {
+    const pos = {}
+    classes.forEach(c => { pos[c.id] = { x: c.x, y: c.y } })
+    localStorage.setItem('uml-barberia-pos-v3', JSON.stringify(pos))
+  } catch(e) {}
+}
+
+function loadPositions() {
+  try {
+    const saved = localStorage.getItem('uml-barberia-pos-v3')
+    if (saved) {
+      const pos = JSON.parse(saved)
+      classes.forEach(c => {
+        if (pos[c.id]) { c.x = pos[c.id].x; c.y = pos[c.id].y }
+      })
+    }
+  } catch(e) {}
+}
+
+function resetLayout() {
+  const defaults = {
+    Cliente: {x:60,y:60}, Cita: {x:60,y:420},
+    HorarioAtencion: {x:60,y:780},
+    Barberia: {x:560,y:60}
+  }
+  classes.forEach(c => { if (defaults[c.id]) { c.x = defaults[c.id].x; c.y = defaults[c.id].y } })
+  try { localStorage.removeItem('uml-barberia-pos-v3') } catch(e) {}
+  panX = 0; panY = 0; scale = 1
+  updateTransform()
+  document.getElementById('zoomLabel').textContent = '100%'
+  renderClasses()
+  requestAnimationFrame(drawRelations)
+}
+
+loadPositions()
+renderClasses()
+requestAnimationFrame(() => {
+  drawRelations()
+})
+</script>
+
+</body></html>
