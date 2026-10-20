@@ -20,8 +20,6 @@
 
 **Jade Barbershop** es una aplicación de escritorio desarrollada en **Java** con interfaz gráfica **Swing**. Su objetivo es centralizar la operación diaria de una barbería: administrar clientes, agendar citas, gestionar tipos de servicio, controlar la lista de espera y configurar el horario de atención.
 
-El proyecto está organizado siguiendo el paradigma de **Programación Orientada a Objetos** y separa las responsabilidades en capas de **lógica**, **control** e **interfaz**. La información se conserva en disco mediante persistencia en archivos y se contempla el envío de notificaciones por correo electrónico.
-
 ## Funcionalidades principales
 
 - **Gestión de clientes:** registro, consulta, actualización y eliminación.
@@ -48,7 +46,7 @@ El proyecto está organizado siguiendo el paradigma de **Programación Orientada
 - **Eclipse IDE for Java Developers** (recomendado, el proyecto incluye `.project` y `.classpath`).
 - Credenciales SMTP si se desea probar el envío de notificaciones por correo.
 
-## Puesta en marcha
+## Como ejecutar
 
 ### Desde Eclipse
 
@@ -73,27 +71,6 @@ java -cp bin interfaz.Interfaz
 
 > **Nota:** esta primera versión del repositorio contiene el esqueleto del proyecto (paquetes y clases base), por lo que todavía no existe un método `main` ejecutable.
 
-## Estructura del proyecto
-
-```text
-jadebarbershop/
-├── images/
-│   └── logo.png                 # Logo del proyecto
-├── src/
-│   ├── module-info.java         # Módulo jadebarbershop
-│   ├── logica/                  # Modelo del dominio
-│   │   ├── Cita.java
-│   │   ├── Cliente.java
-│   │   ├── HorarioAtencion.java
-│   │   └── TipoServicio.java
-│   ├── control/                 # Lógica de negocio y coordinación
-│   │   └── Barberia.java
-│   └── interfaz/                # Interfaz gráfica (Swing)
-│       └── Interfaz.java
-├── UML_Barberia_v3.html         # Diagrama UML del sistema
-└── README.md
-```
-
 ## Diagrama UML
 
 El diseño de clases del sistema se encuentra en [`UML_Barberia_v3.html`](UML_Barberia_v3.html). Para visualizarlo, abrir el archivo en cualquier navegador web.
@@ -110,7 +87,3 @@ El diseño de clases del sistema se encuentra en [`UML_Barberia_v3.html`](UML_Ba
 ## Estado del proyecto
 
 🚧 **En desarrollo.** Actualmente el repositorio cuenta con la estructura base del proyecto (modelo, control e interfaz) y el diagrama UML. Las funcionalidades descritas se irán incorporando en las siguientes iteraciones.
-
----
-
-<p align="center">Hecho con ☕ y Java por el equipo de Jade Barbershop.</p>
