@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/logo.png" alt="Logo de Jade Barbershop" width="200">
+  <img src="images/logo.png" alt="Logo de Jade Barbershop" width="500">
 </p>
 
 <h1 align="center">Jade Barbershop</h1>
