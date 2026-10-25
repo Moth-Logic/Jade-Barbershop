@@ -398,8 +398,7 @@ const classes = [
     attrs: [
       '- email: String {PK}',
       '- nombreCompleto: String',
-      '- telefono: String',
-      '- email: String'
+      '- telefono: String'
     ],
     methods: [
       '+ getId(): String',
@@ -416,18 +415,24 @@ const classes = [
     id: 'Cita', pkg: 'logica', stereotype: '',
     x: 60, y: 420,
     attrs: [
-      '- email: String {PK}',
+      '- id: String {PK}',
       '- fecha: LocalDate',
       '- hora: int',
-      '- confirmada: boolean'
+      '- confirmada: boolean',
+      '- cliente: Cliente',
+      '- tipoServicio: TipoServicio'
     ],
     methods: [
       '+ getId(): String',
       '+ getFecha(): LocalDate',
       '+ getHora(): int',
       '+ isConfirmada(): boolean',
+      '+ getCliente(): Cliente',
+      '+ getTipoServicio(): TipoServicio',
       '+ setFecha(f: LocalDate): void',
       '+ setHora(h: int): void',
+      '+ setCliente(c: Cliente): void',
+      '+ setTipoServicio(ts: TipoServicio): void',
       '+ confirmar(): void',
       '+ toString(): String'
     ]
@@ -453,7 +458,7 @@ const classes = [
     id: 'TipoServicio', pkg: 'logica', stereotype: '',
     x: 350, y: 780,
     attrs: ['- id: String', '- nombre: String', '- descripcion: String', '- precio: double', '- duracionMinutos: int'],
-    methods: ['+ getId(): String', '+ getNombre(): String', '+ getDescripcion(): String', '+ getPrecio(): double', '+ setNombre(nombre: String): void', '+ setDescripcion(descripcion: String): void', '+ setPrecio(precio: double): void', '+ toString(): String']
+    methods: ['+ getId(): String', '+ getNombre(): String', '+ getDescripcion(): String', '+ getPrecio(): double', '+ getDuracionMinutos(): int', '+ setNombre(nombre: String): void', '+ setDescripcion(descripcion: String): void', '+ setPrecio(precio: double): void', '+ setDuracionMinutos(duracion: int): void', '+ toString(): String']
   },  {
     id: 'Barberia', pkg: 'control', stereotype: '',
     x: 560, y: 60,
@@ -495,6 +500,7 @@ const classes = [
 const relations = [
   { from: 'Barberia', to: 'Cliente', type: 'composition', labelFrom: '1', labelTo: '*', name: 'clientes' },
   { from: 'Barberia', to: 'Cita', type: 'composition', labelFrom: '1', labelTo: '*', name: 'citas' },
+  { from: 'Barberia', to: 'TipoServicio', type: 'composition', labelFrom: '1', labelTo: '*', name: 'tiposServicio' },
   { from: 'Barberia', to: 'HorarioAtencion', type: 'composition', labelFrom: '1', labelTo: '1', name: 'horario' },
   { from: 'Barberia', to: 'Cliente', type: 'association', labelFrom: '1', labelTo: '*', name: 'listaEspera (ordenada)', offset: 40 },
   { from: 'Cita', to: 'Cliente', type: 'association', labelFrom: '*', labelTo: '1', name: 'cliente' },
