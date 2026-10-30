@@ -11,6 +11,7 @@ import logica.TipoServicio;
 
 public class Barberia {
 	private int consecutivoCita = 0;
+	private int consecutivoTipoServicio = 0;
 	private String nombre;
 	private HorarioAtencion horario;
 	private List<Cliente> clientes;
@@ -128,7 +129,7 @@ public class Barberia {
 		
 		String id = String.valueOf(consecutivoCita++);
 		
-		Cita cita = new Cita(id ,fecha, hora, cliente, tipoServicio);
+		Cita cita = new Cita(id, fecha, hora, cliente, tipoServicio);
 		this.citas.add(cita);
 	}
 	public void modificarCita(String id, LocalDate fecha, int hora, String emailCliente, String idTipoServicio) throws Exception {
@@ -273,11 +274,44 @@ public class Barberia {
 			throw new Exception("No current appointments on month.");
 		return citaciones;
 	}
-	public void crearTipoServicio(String nombre, String descripcion, double precio, int duracionMinutos) {
-		
+	private void validarTipoServicio(String id, String nombre, String descripcion, double precio, int duracionMinutos) throws Exception {
+
+	    if (id == null || id.isEmpty() || !id.matches("^[0-9]+$"))
+	        throw new Exception("Invalid ID.");
+
+	    if (nombre == null || nombre.isEmpty())
+	        throw new Exception("Invalid name.");
+
+	    if (descripcion == null || descripcion.isEmpty())
+	        throw new Exception("Invalid description.");
+	    
+	    if (precio <= 0)
+	        throw new Exception("Invalid price.");
+
+	    if (duracionMinutos <= 0)
+	        throw new Exception("Invalid duration.");
 	}
-	public void modificarTipoServicio(String id, String nombre, String descripcion, double precio, int duracionMinutos) {
+	public void crearTipoServicio(String nombre, String descripcion, double precio, int duracionMinutos) throws Exception {
 		
+		validarTipoServicio("0", nombre, descripcion, precio, duracionMinutos);
+		
+		String id = String.valueOf(consecutivoTipoServicio++);
+		
+		TipoServicio servicio = new TipoServicio(id, nombre, descripcion, precio, duracionMinutos);
+		this.tiposServicio.add(servicio);
+	}
+	public void modificarTipoServicio(String id, String nombre, String descripcion, double precio, int duracionMinutos) throws Exception {
+		if (tiposServicio.size() == 0)
+			throw new Exception("No current services");
+		
+		validarTipoServicio(id, nombre, descripcion, precio, duracionMinutos);
+		
+		TipoServicio servicio = consultarTipoServicio(id);
+
+		servicio.setNombre(nombre);
+		servicio.setDescripcion(descripcion);
+	    servicio.setPrecio(precio);
+	    servicio.setDuracionMinutos(duracionMinutos);
 	}
 	public void borrarTipoServicio(String id) {
 		
