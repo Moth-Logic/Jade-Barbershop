@@ -2,6 +2,8 @@ package control;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
 import java.time.LocalDate;
 
 import logica.Cliente;
@@ -12,28 +14,34 @@ import logica.TipoServicio;
 public class Barberia {
 	private int consecutivoCita = 0;
 	private int consecutivoTipoServicio = 0;
+	private int consecutivoListaEspera = 1;
 	private String nombre;
 	private HorarioAtencion horario;
 	private List<Cliente> clientes;
+	private Map<Integer, Cliente> listaEspera;
 	private List<Cita> citas;
 	private List<TipoServicio> tiposServicio;
 	
 	public Barberia(String nombre) {
 		this.nombre = nombre;
 		clientes = new ArrayList<Cliente>();
+		listaEspera = new TreeMap<>();
 		citas = new ArrayList<Cita>();
 		tiposServicio = new ArrayList<TipoServicio>();
 	}
+	public void validarCliente(String nombre, String tel, String email) throws Exception {
+		if (nombre.isEmpty())
+	        throw new Exception("Invalid name.");
+	    
+	    if (!tel.matches("^[0-9]{8}$"))
+	        throw new Exception("Invalid phone number.");
+
+	    if (!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$"))
+	        throw new Exception("Invalid email.");
+	}
 	public void crearCliente(String nombreCompleto, String tel, String email) throws Exception {
 		
-		if (nombreCompleto.isEmpty())
-	        throw new Exception("Invalid name.");
-		
-		if (!tel.matches("^[0-9]{8}$"))
-		    throw new Exception("Invalid phone number.");
-		
-		if (!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$"))
-		    throw new Exception("Invalid email.");
+		validarCliente(nombreCompleto, tel, email);
 		
 		Cliente cliente = new Cliente(nombreCompleto, tel, email);
 		this.clientes.add(cliente);
@@ -44,15 +52,8 @@ public class Barberia {
 			throw new Exception("No current clients");
 
 	    Cliente cliente = consultarCliente(email);
-
-	    if (nombreCompleto.isEmpty())
-	        throw new Exception("Invalid name.");
 	    
-	    if (!tel.matches("^[0-9]{8}$"))
-	        throw new Exception("Invalid phone number.");
-
-	    if (!emailNuevo.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$"))
-	        throw new Exception("Invalid email.");
+	    validarCliente(nombreCompleto, tel, emailNuevo);
 
 	    cliente.setNombreCompleto(nombreCompleto);
 	    cliente.setTelefono(tel);
@@ -350,5 +351,44 @@ public class Barberia {
 		}
 		
 		return servicios;
+	}
+	public void agregarAListaEspera(String emailCliente) throws Exception {
+		
+		Cliente cliente = consultarCliente(emailCliente);
+		
+		this.listaEspera.put(consecutivoListaEspera++, cliente);
+	}
+	public void eliminarDeListaEspera(String emailCliente) throws Exception {
+		
+		Cliente cliente = consultarCliente(emailCliente);
+		
+		for (int i = 0; i < listaEspera.size(); i++) {
+			if (listaEspera.get(i) == cliente) {
+				listaEspera.remove(i);
+				consecutivoListaEspera--;
+				return;
+			}
+		}
+		throw new Exception("Client not in waiting list.");
+	}
+	public ArrayList<String[]> mostrarListaEspera() throws Exception {
+		if (listaEspera.size() == 0)
+			throw new Exception("Waiting list is currently empty.");
+		
+		ArrayList<String[]> enEspera = new ArrayList<>();
+		
+		for (int i = 1; i <= listaEspera.size(); i++) {
+			String[] datos = {
+				listaEspera.get(i).getId(),
+				listaEspera.get(i).getNombreCompleto(),
+				listaEspera.get(i).getEmail()
+			};
+			enEspera.add(datos);
+		}
+		
+		return enEspera;
+	}
+	public void setHorario(int dia, boolean abierto, int inicio, int fin) {
+		
 	}
 }
