@@ -153,10 +153,7 @@ public class Barberia {
 		if (citas.size() == 0)
 			throw new Exception("No current appointments.");
 		
-		if (id.isEmpty())
-		    throw new Exception("Invalid ID.");
-		
-		if (!id.matches("^[0-9]+$"))
+		if (id.isEmpty() || !id.matches("^[0-9]+$"))
 		    throw new Exception("Invalid ID.");
 		
 		for (int i = 0; i < citas.size(); i++) {
@@ -181,10 +178,7 @@ public class Barberia {
 		if (citas.size() == 0)
 			throw new Exception("No current appointments.");
 		
-		if (id.isEmpty())
-		    throw new Exception("Invalid ID.");
-		
-		if (!id.matches("^[0-9]+$"))
+		if (id.isEmpty() || !id.matches("^[0-9]+$"))
 		    throw new Exception("Invalid ID.");
 		
 		Cita cita = consultarCita(id);
@@ -313,8 +307,21 @@ public class Barberia {
 	    servicio.setPrecio(precio);
 	    servicio.setDuracionMinutos(duracionMinutos);
 	}
-	public void borrarTipoServicio(String id) {
+	public void borrarTipoServicio(String id) throws Exception {
+
+		if (tiposServicio.size() == 0)
+			throw new Exception("No current services.");
 		
+		if (id.isEmpty() || !id.matches("^[0-9]+$"))
+		    throw new Exception("Invalid ID.");
+		
+		for (int i = 0; i < tiposServicio.size(); i++) {
+			if (tiposServicio.get(i).getId().equals(id)) {
+				tiposServicio.remove(i);
+				return;
+			}
+		}
+		throw new Exception("Service not found.");
 	}
 	public TipoServicio consultarTipoServicio(String id) throws Exception {
 		for (int i = 0; i < tiposServicio.size(); i++) {
@@ -327,7 +334,7 @@ public class Barberia {
 	}
 	public ArrayList<String[]> listarTiposServicio() throws Exception {
 		if (tiposServicio.size() == 0)
-			throw new Exception("No current appointments.");
+			throw new Exception("No current services.");
 		
 		ArrayList<String[]> servicios = new ArrayList<>();
 		
