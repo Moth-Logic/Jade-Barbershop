@@ -1,9 +1,12 @@
 package control;
 
+import java.io.Serializable;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.TreeMap;
 import java.time.LocalDate;
 
 import logica.Cliente;
@@ -11,7 +14,11 @@ import logica.Cita;
 import logica.HorarioAtencion;
 import logica.TipoServicio;
 
-public class Barberia {
+public class Barberia implements Serializable {
+	/**
+	 * Representa la barbería.
+	 */
+	private static final long serialVersionUID = 1L;
 	private int consecutivoCita = 0;
 	private int consecutivoTipoServicio = 0;
 	private String nombre;
@@ -389,5 +396,43 @@ public class Barberia {
 	}
 	public void setHorario(int dia, boolean abierto, int inicio, int fin) throws Exception {
 		horario.setDia(dia, abierto, inicio, fin);
+	}
+	public String enviarConfirmacion(String idCita) throws Exception {
+		if (idCita == null || idCita.isEmpty() || !idCita.matches("^[0-9]+$"))
+	        throw new Exception("Invalid ID.");
+		
+		Cita cita = consultarCita(idCita);
+		cita.confirmar();
+		Cliente cliente = cita.getCliente();
+		return "Confirmación enviada a:" + cliente.getEmail();
+	}
+	public String enviarRecordatorio(String idCita) throws Exception {
+		if (idCita == null || idCita.isEmpty() || !idCita.matches("^[0-9]+$"))
+	        throw new Exception("Invalid ID.");
+		
+		Cita cita = consultarCita(idCita);
+		return "Recordatorio enviado a:" + cita.getCliente().getEmail();
+	}
+	public void guardar() throws Exception {
+		ObjectOutputStream salida = new ObjectOutputStream(new FileOutputStream("barberia.dat"));
+
+		salida.writeObject(this);
+	    salida.close();
+	}
+	public void cargar() throws Exception {
+		ObjectInputStream entrada = new ObjectInputStream(new FileInputStream("barberia.dat"));
+
+	    Barberia barberia = (Barberia) entrada.readObject();
+
+	    this.nombre = barberia.nombre;
+	    this.horario = barberia.horario;
+	    this.clientes = barberia.clientes;
+	    this.listaEspera = barberia.listaEspera;
+	    this.citas = barberia.citas;
+	    this.tiposServicio = barberia.tiposServicio;
+	    this.consecutivoCita = barberia.consecutivoCita;
+	    this.consecutivoTipoServicio = barberia.consecutivoTipoServicio;
+
+	    entrada.close();
 	}
 }
