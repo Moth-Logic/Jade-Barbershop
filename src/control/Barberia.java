@@ -14,18 +14,17 @@ import logica.TipoServicio;
 public class Barberia {
 	private int consecutivoCita = 0;
 	private int consecutivoTipoServicio = 0;
-	private int consecutivoListaEspera = 1;
 	private String nombre;
 	private HorarioAtencion horario;
 	private List<Cliente> clientes;
-	private Map<Integer, Cliente> listaEspera;
+	private List<Cliente> listaEspera;
 	private List<Cita> citas;
 	private List<TipoServicio> tiposServicio;
 	
 	public Barberia(String nombre) {
 		this.nombre = nombre;
 		clientes = new ArrayList<Cliente>();
-		listaEspera = new TreeMap<>();
+		listaEspera = new ArrayList<Cliente>();
 		citas = new ArrayList<Cita>();
 		tiposServicio = new ArrayList<TipoServicio>();
 	}
@@ -356,7 +355,8 @@ public class Barberia {
 		
 		Cliente cliente = consultarCliente(emailCliente);
 		
-		this.listaEspera.put(consecutivoListaEspera++, cliente);
+		this.listaEspera.add(cliente);
+		listaEspera.sort(null);
 	}
 	public void eliminarDeListaEspera(String emailCliente) throws Exception {
 		
@@ -365,7 +365,6 @@ public class Barberia {
 		for (int i = 0; i < listaEspera.size(); i++) {
 			if (listaEspera.get(i) == cliente) {
 				listaEspera.remove(i);
-				consecutivoListaEspera--;
 				return;
 			}
 		}
@@ -388,7 +387,7 @@ public class Barberia {
 		
 		return enEspera;
 	}
-	public void setHorario(int dia, boolean abierto, int inicio, int fin) {
-		
+	public void setHorario(int dia, boolean abierto, int inicio, int fin) throws Exception {
+		horario.setDia(dia, abierto, inicio, fin);
 	}
 }
