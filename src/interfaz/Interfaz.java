@@ -7,7 +7,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import control.Barberia;
 
-public class Interfaz_parte1 extends JFrame {
+public class Interfaz extends JFrame {
 
 	private Barberia barberia;
 	private JTabbedPane tabbedPane;
@@ -26,8 +26,13 @@ public class Interfaz_parte1 extends JFrame {
 	private JTextField txtPrecioServicio;
 	private JTextField txtDuracionServicio;
 	private String idServicioSeleccionado;
+    // tabs por agregar:
+	// Citas (tabla, modelo, campos de fecha/hora/email/idServicio)
+	// Calendario (tabla, modelo)
+	// Lista de Espera (tabla, modelo, campo email)
+	// Horario (checkboxes y campos de hora por dia)
 
-	public Interfaz_parte1() {
+	public Interfaz() {
 		barberia = new Barberia("Jade Barbershop");
 		try {
 			barberia.cargar();
@@ -47,6 +52,11 @@ public class Interfaz_parte1 extends JFrame {
 
 		tabbedPane.addTab("Clientes", crearPanelClientes());
 		tabbedPane.addTab("Tipos de Servicio", crearPanelServicios());
+        // to do
+		// tabbedPane.addTab("Citas", crearPanelCitas());
+		// tabbedPane.addTab("Calendario", crearPanelCalendario());
+		// tabbedPane.addTab("Lista de Espera", crearPanelEspera());
+		// tabbedPane.addTab("Horario", crearPanelHorario());
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -344,10 +354,21 @@ public class Interfaz_parte1 extends JFrame {
 		idServicioSeleccionado = null;
 		tablaServicios.clearSelection();
 	}
+    // To do:
+	// crearPanelCitas() CRUD de citas con fecha, hora, email cliente, id servicio botones: Crear, Modificar, Borrar, Buscar, Confirmar, Enviar confirmacion, Recordatorio, Listar, Limpiar
+	// actualizarTablaCitas() llama barberia.ListarCitas()
+	// limpiarCamposCita()
+	// crearPanelCalendario() ver citas por fecha, semana o mes
+	//   usa getCitasPorFecha(), getCitasSemana(), getCitasMes()
+	// crearPanelEspera()  agregar/eliminar clientes de lista de espera
+	//   usa agregarAListaEspera(), eliminarDeListaEspera(), mostrarListaEspera()
+	// actualizarTablaEspera()
+	// crearPanelHorario() configurar dias y horas de atencion
+	//   usa setHorario(dia, abierto, inicio, fin) para cada dia 0-6
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
-			new Interfaz_parte1().setVisible(true);
+			new Interfaz().setVisible(true);
 		});
 	}
 }

@@ -2,7 +2,6 @@ package logica;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.Arrays;
 
 /**
  * Representa el horario semanal de atención de la barbería.
@@ -43,38 +42,43 @@ public class HorarioAtencion implements Serializable {
         this.horaFin[6] = 0;
     }
 
-    private int normalizarDia(int dia) {
-        if (dia >= 0 && dia < 7) {
-            return dia;
-        }
-        // Si se recibe valor 1..7 (estilo java.time.DayOfWeek: 1=Lunes, 7=Domingo)
-        if (dia == 7) {
-            return 6;
-        }
-        if (dia > 0 && dia <= 7) {
-            return dia - 1;
-        }
-        return 0;
+    private int normalizarDia(int dia) throws Exception {
+    	if (dia < 0 || dia > 7)
+    		throw new Exception("Invalid day.");
+    	if (dia == 0)
+            return 0;
+
+        return dia - 1;
     }
 
-    public void setDia(int dia, boolean abierto, int inicio, int fin) {
+    public void setDia(int dia, boolean abierto, int inicio, int fin) throws Exception {
         int d = normalizarDia(dia);
+        
+        if (inicio < 0 || inicio > 23)
+            throw new Exception("Invalid start time.");
+
+        if (fin < 0 || fin > 23)
+            throw new Exception("Invalid end time.");
+
+        if (abierto && inicio >= fin)
+            throw new Exception("Invalid schedule.");
+        
         this.abierto[d] = abierto;
         this.horaInicio[d] = inicio;
         this.horaFin[d] = fin;
     }
 
-    public boolean isDiaAbierto(int dia) {
+    public boolean isDiaAbierto(int dia) throws Exception {
         int d = normalizarDia(dia);
         return this.abierto[d];
     }
 
-    public int getHoraInicio(int dia) {
+    public int getHoraInicio(int dia) throws Exception {
         int d = normalizarDia(dia);
         return this.horaInicio[d];
     }
 
-    public int getHoraFin(int dia) {
+    public int getHoraFin(int dia) throws Exception {
         int d = normalizarDia(dia);
         return this.horaFin[d];
     }
@@ -85,7 +89,7 @@ public class HorarioAtencion implements Serializable {
      * @param hora Hora entera (0 a 23)
      * @return true si está disponible dentro de la jornada, false en caso contrario.
      */
-    public boolean estaDisponible(int dia, int hora) {
+    public boolean estaDisponible(int dia, int hora) throws Exception {
         int d = normalizarDia(dia);
         if (!this.abierto[d]) {
             return false;
@@ -96,22 +100,22 @@ public class HorarioAtencion implements Serializable {
     /**
      * Valida disponibilidad a partir de una fecha concreta.
      */
-    public boolean estaDisponible(LocalDate fecha, int hora) {
+    public boolean estaDisponible(LocalDate fecha, int hora) throws Exception {
         if (fecha == null) return false;
         int dia = fecha.getDayOfWeek().getValue() - 1; // 1 (Mon) -> 0, 7 (Sun) -> 6
         return estaDisponible(dia, hora);
     }
 
     public boolean[] getAbierto() {
-        return abierto;
+        return abierto.clone();
     }
 
     public int[] getHoraInicio() {
-        return horaInicio;
+        return horaInicio.clone();
     }
 
     public int[] getHoraFin() {
-        return horaFin;
+        return horaFin.clone();
     }
 
     @Override
