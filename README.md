@@ -63,13 +63,12 @@ Compilar todas las fuentes:
 javac -d bin $(find src -name "*.java")
 ```
 
-Ejecutar la aplicación (una vez implementado el punto de entrada):
+Ejecutar la aplicación:
 
 ```bash
 java -cp bin interfaz.Interfaz
 ```
 
-> **Nota:** esta primera versión del repositorio contiene el esqueleto del proyecto (paquetes y clases base), por lo que todavía no existe un método `main` ejecutable.
 
 ## Diagrama UML
 

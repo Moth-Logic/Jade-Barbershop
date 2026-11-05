@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Representa a un cliente de la barbería.
  */
-public class Cliente implements Serializable {
+public class Cliente implements Serializable, Comparable<Cliente> {
     private static final long serialVersionUID = 1L;
 
     private String nombreCompleto;
@@ -65,6 +65,16 @@ public class Cliente implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(email != null ? email.toLowerCase() : null);
+    }
+
+    @Override
+    public int compareTo(Cliente o) {
+        if (o == null) return 1;
+        int cmp = (this.nombreCompleto != null ? this.nombreCompleto : "")
+                .compareToIgnoreCase(o.nombreCompleto != null ? o.nombreCompleto : "");
+        if (cmp != 0) return cmp;
+        return (this.email != null ? this.email : "")
+                .compareToIgnoreCase(o.email != null ? o.email : "");
     }
 
     @Override

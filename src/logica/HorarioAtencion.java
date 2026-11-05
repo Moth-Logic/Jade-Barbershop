@@ -43,12 +43,10 @@ public class HorarioAtencion implements Serializable {
     }
 
     private int normalizarDia(int dia) throws Exception {
-    	if (dia < 0 || dia > 7)
-    		throw new Exception("Invalid day.");
-    	if (dia == 0)
-            return 0;
-
-        return dia - 1;
+        if (dia < 0 || dia > 6) {
+            throw new Exception("Invalid day: " + dia + ". Debe ser de 0 (Lunes) a 6 (Domingo).");
+        }
+        return dia;
     }
 
     public void setDia(int dia, boolean abierto, int inicio, int fin) throws Exception {
@@ -57,7 +55,7 @@ public class HorarioAtencion implements Serializable {
         if (inicio < 0 || inicio > 23)
             throw new Exception("Invalid start time.");
 
-        if (fin < 0 || fin > 23)
+        if (fin < 0 || fin > 24)
             throw new Exception("Invalid end time.");
 
         if (abierto && inicio >= fin)
@@ -85,7 +83,7 @@ public class HorarioAtencion implements Serializable {
 
     /**
      * Valida si la barbería está abierta y en horario de atención para un día y hora específicos.
-     * @param dia Día de la semana (0=Lunes .. 6=Domingo, o 1=Lunes .. 7=Domingo)
+     * @param dia Día de la semana (0=Lunes .. 6=Domingo)
      * @param hora Hora entera (0 a 23)
      * @return true si está disponible dentro de la jornada, false en caso contrario.
      */
