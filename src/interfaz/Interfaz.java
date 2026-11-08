@@ -563,6 +563,20 @@ public class Interfaz extends JFrame {
 		});
 		btnPanel.add(btnBorrar);
 
+		JButton btnBuscar = new JButton("Buscar Cita");
+		btnBuscar.addActionListener(e -> {
+			try {
+				String idBuscar = JOptionPane.showInputDialog(this, "Ingrese el ID de la cita:");
+				if (idBuscar != null && !idBuscar.trim().isEmpty()) {
+					logica.Cita c = barberia.consultarCita(idBuscar.trim());
+					JOptionPane.showMessageDialog(this, c.toString(), "Cita encontrada", JOptionPane.INFORMATION_MESSAGE);
+				}
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		});
+		btnPanel.add(btnBuscar);
+
 		JButton btnConfirmar = new JButton("Confirmar Cita");
 		btnConfirmar.addActionListener(e -> {
 			try {
