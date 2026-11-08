@@ -1,1 +1,7 @@
 /bin/
+/out/
+*.class
+barberia.dat
+state/
+.settings/
+.classpath
