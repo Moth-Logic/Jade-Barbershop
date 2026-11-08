@@ -97,8 +97,22 @@ public class Barberia implements Serializable {
 		String emailLimpio = email.trim();
 		for (int i = 0; i < clientes.size(); i++) {
 			if (clientes.get(i).getEmail().equalsIgnoreCase(emailLimpio)) {
-				// Remover también de lista de espera si estuviera
-				eliminarDeListaEsperaSilencioso(emailLimpio);
+
+				for (int j = 0; j < citas.size(); j++) {
+					Cita c = citas.get(j);
+					if (c.getCliente() != null
+						&& c.getCliente().getEmail().equalsIgnoreCase(emailLimpio)
+						&& !c.getFecha().isBefore(LocalDate.now())) {
+						throw new Exception("No se puede borrar el cliente porque tiene citas programadas a futuro.");
+					}
+				}
+
+				for (int j = 0; j < listaEspera.size(); j++) {
+					if (listaEspera.get(j).getEmail().equalsIgnoreCase(emailLimpio)) {
+						throw new Exception("No se puede borrar el cliente porque se encuentra en la lista de espera.");
+					}
+				}
+
 				clientes.remove(i);
 				return;
 			}
@@ -350,8 +364,17 @@ public class Barberia implements Serializable {
 		if (id == null || id.trim().isEmpty() || !id.trim().matches("^[0-9]+$"))
 			throw new Exception("ID de servicio inválido.");
 
+		String idLimpio = id.trim();
+
+		for (int i = 0; i < citas.size(); i++) {
+			Cita c = citas.get(i);
+			if (c.getTipoServicio() != null && c.getTipoServicio().getId().equals(idLimpio)) {
+				throw new Exception("No se puede eliminar el tipo de servicio porque esta siendo utilizado en una cita programada.");
+			}
+		}
+
 		for (int i = 0; i < tiposServicio.size(); i++) {
-			if (tiposServicio.get(i).getId().equals(id.trim())) {
+			if (tiposServicio.get(i).getId().equals(idLimpio)) {
 				tiposServicio.remove(i);
 				return;
 			}
