@@ -398,6 +398,24 @@ public class Interfaz extends JFrame {
 		});
 		btnPanel.add(btnBorrar);
 
+		JButton btnBuscar = new JButton("Buscar");
+		btnBuscar.addActionListener(e -> {
+			try {
+				String idBuscar = JOptionPane.showInputDialog(this, "Ingrese el ID del tipo de servicio:");
+				if (idBuscar != null && !idBuscar.trim().isEmpty()) {
+					logica.TipoServicio s = barberia.consultarTipoServicio(idBuscar.trim());
+					idServicioSeleccionado = s.getId();
+					txtNombreServicio.setText(s.getNombre());
+					txtDescServicio.setText(s.getDescripcion());
+					txtPrecioServicio.setText(String.valueOf(s.getPrecio()));
+					txtDuracionServicio.setText(String.valueOf(s.getDuracionMinutos()));
+				}
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		});
+		btnPanel.add(btnBuscar);
+
 		JButton btnListar = new JButton("Listar");
 		btnListar.addActionListener(e -> actualizarTablaServicios());
 		btnPanel.add(btnListar);
