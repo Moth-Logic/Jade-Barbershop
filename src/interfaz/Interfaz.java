@@ -30,18 +30,7 @@ import javax.swing.table.DefaultTableModel;
 import control.Barberia;
 import logica.HorarioAtencion;
 
-/**
- * Ventana principal de Jade Barbershop (capa de vista, Swing).
- *
- * La ventana está dividida en seis pestañas: Clientes, Tipos de Servicio, Citas,
- * Calendario, Lista de Espera y Horario. Cada pestaña tiene una tabla con los datos y un
- * formulario con botones; todos los botones delegan la lógica en la clase Barberia y
- * aquí solo se muestran los resultados o los mensajes de error.
- *
- * Detalle importante: el envío de correos se ejecuta en un hilo aparte, porque hablar
- * con el servidor SMTP tarda segundos y congelaría la ventana si se hiciera en el hilo
- * de la interfaz (EDT).
- */
+/** Ventana principal del sistema con las seis pestañas de la aplicación. */
 public class Interfaz extends JFrame {
 
 	/** Versión de la clase; la ventana no se serializa, pero se mantiene por convención. */
@@ -53,12 +42,12 @@ public class Interfaz extends JFrame {
 	/** Contenedor de las seis pestañas de la ventana. */
 	private JTabbedPane tabbedPane;
 
-	// ------------------------- Componentes: Clientes -------------------------
+	// Componentes de clientes.
 
 	/** Tabla con los clientes registrados. */
 	private JTable tablaClientes;
 
-	/** Modelo de datos de {@link #tablaClientes}. */
+	/** Modelo de datos de la tabla de clientes. */
 	private DefaultTableModel modeloClientes;
 
 	/** Campo del nombre completo. */
@@ -70,15 +59,15 @@ public class Interfaz extends JFrame {
 	/** Campo del correo, que identifica al cliente. */
 	private JTextField txtEmailCliente;
 
-	/** Correo del cliente seleccionado en la tabla, o {@code null} si no hay ninguno. */
+	/** Correo del cliente seleccionado en la tabla. */
 	private String emailClienteSeleccionado;
 
-	// --------------------- Componentes: Tipos de Servicio --------------------
+	// Componentes de tipos de servicio.
 
 	/** Tabla con el catálogo de servicios. */
 	private JTable tablaServicios;
 
-	/** Modelo de datos de {@link #tablaServicios}. */
+	/** Modelo de datos de la tabla de servicios. */
 	private DefaultTableModel modeloServicios;
 
 	/** Campo del nombre del servicio. */
@@ -93,15 +82,15 @@ public class Interfaz extends JFrame {
 	/** Campo de la duración en minutos. */
 	private JTextField txtDuracionServicio;
 
-	/** ID del servicio seleccionado en la tabla, o {@code null} si no hay ninguno. */
+	/** Identificador del servicio seleccionado en la tabla. */
 	private String idServicioSeleccionado;
 
-	// --------------------------- Componentes: Citas --------------------------
+	// Componentes de citas.
 
 	/** Tabla con todas las citas. */
 	private JTable tablaCitas;
 
-	/** Modelo de datos de {@link #tablaCitas}. */
+	/** Modelo de datos de la tabla de citas. */
 	private DefaultTableModel modeloCitas;
 
 	/** Campo de la fecha de la cita (YYYY-MM-DD). */
@@ -116,26 +105,26 @@ public class Interfaz extends JFrame {
 	/** Campo del ID del servicio de la cita. */
 	private JTextField txtIdServicioCita;
 
-	/** ID de la cita seleccionada en la tabla, o {@code null} si no hay ninguna. */
+	/** Identificador de la cita seleccionada en la tabla. */
 	private String idCitaSeleccionada;
 
-	// ------------------------ Componentes: Calendario ------------------------
+	// Componentes del calendario.
 
 	/** Tabla de consultas del calendario (día, semana o mes). */
 	private JTable tablaCalendario;
 
-	/** Modelo de datos de {@link #tablaCalendario}. */
+	/** Modelo de datos de la tabla del calendario. */
 	private DefaultTableModel modeloCalendario;
 
 	/** Fecha usada para las consultas del calendario. */
 	private JTextField txtFechaCalendario;
 
-	// ----------------------- Componentes: Lista de Espera --------------------
+	// Componentes de la lista de espera.
 
 	/** Tabla con los clientes en espera. */
 	private JTable tablaEspera;
 
-	/** Modelo de datos de {@link #tablaEspera}. */
+	/** Modelo de datos de la tabla de espera. */
 	private DefaultTableModel modeloEspera;
 
 	/** Campo del correo del cliente a agregar o retirar de la espera. */
@@ -144,9 +133,9 @@ public class Interfaz extends JFrame {
 	/** Correo del cliente seleccionado en la lista de espera. */
 	private String emailEsperaSeleccionado;
 
-	// -------------------- Componentes: Horario de Atención ------------------
+	// Componentes del horario de atención.
 
-	/** Casillas que indican si la barbería abre cada día (0 = lunes ... 6 = domingo). */
+	/** Casillas que indican si la barbería abre cada día. */
 	private JCheckBox[] chkAbierto = new JCheckBox[7];
 
 	/** Hora de apertura de cada día. */
@@ -161,16 +150,13 @@ public class Interfaz extends JFrame {
 		try {
 			barberia.cargar();
 		} catch (Exception e) {
-			// Si falla la carga se iniciará con el estado por defecto
+			// Si falla la carga se usará el estado por defecto.
 		}
 		initComponents();
 		cargarDatosIniciales();
 	}
 
-	/**
-	 * Crea la ventana, las seis pestañas y el guardado al cerrar.
-	 * Se llama una sola vez desde el constructor.
-	 */
+	/** Crea la ventana, las seis pestañas y el guardado al cerrar. */
 	private void initComponents() {
 		setTitle("Jade Barbershop - Sistema de Gestión");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -190,8 +176,7 @@ public class Interfaz extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				// Guardado explícito al cerrar, además del autoguardado que hace Barberia
-				// después de cada cambio.
+				// Guardado explícito al cerrar, además del autoguardado de cada cambio.
 				try {
 					barberia.guardar();
 				} catch (Exception ex) {
@@ -213,9 +198,7 @@ public class Interfaz extends JFrame {
 		cargarValoresHorario();
 	}
 
-	// =========================================================================
-	// 1. PANEL CLIENTES
-	// =========================================================================
+	// Panel de clientes.
 	/** Pestaña 1: alta, modificación, borrado y búsqueda de clientes por correo. */
 	private JPanel crearPanelClientes() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -379,9 +362,7 @@ public class Interfaz extends JFrame {
 		tablaClientes.clearSelection();
 	}
 
-	// =========================================================================
-	// 2. PANEL TIPOS DE SERVICIO
-	// =========================================================================
+	// Panel de tipos de servicio.
 	/** Pestaña 2: catálogo de servicios (precio y duración en minutos). */
 	private JPanel crearPanelServicios() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -545,13 +526,8 @@ public class Interfaz extends JFrame {
 		tablaServicios.clearSelection();
 	}
 
-	// =========================================================================
-	// 3. PANEL CITAS
-	// =========================================================================
-	/**
-	 * Pestaña 3: agenda de citas. La fecha se escribe como YYYY-MM-DD y la hora es un
-	 * entero de 0 a 23; el servicio se elige por su ID.
-	 */
+	// Panel de citas.
+	/** Pestaña de citas, donde se agenda, modifica y confirma cada cita. */
 	private JPanel crearPanelCitas() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -578,7 +554,7 @@ public class Interfaz extends JFrame {
 				}
 				txtHoraCita.setText(horaStr);
 
-				// Extraer email del cliente si viene en formato Nombre (email)
+				// Se extrae el correo del cliente.
 				try {
 					logica.Cita citaObj = barberia.consultarCita(idCitaSeleccionada);
 					if (citaObj.getCliente() != null) {
@@ -710,8 +686,7 @@ public class Interfaz extends JFrame {
 		});
 		btnPanel.add(btnConfirmar);
 
-		// Los dos botones de correo solo piden la cita seleccionada; el envío real se hace
-		// en segundo plano (ver enviarNotificacion) para no bloquear la ventana.
+		// El envío real se hace en segundo plano para no bloquear la ventana.
 		JButton btnEnviarConfirmacion = new JButton("Enviar Confirmación");
 		btnEnviarConfirmacion.addActionListener(e -> {
 			if (idCitaSeleccionada == null) {
@@ -770,9 +745,7 @@ public class Interfaz extends JFrame {
 		tablaCitas.clearSelection();
 	}
 
-	// =========================================================================
-	// 4. PANEL CALENDARIO
-	// =========================================================================
+	// Panel de calendario.
 	/** Pestaña 4: consultas de citas por día, por semana, por mes o las de hoy. */
 	private JPanel crearPanelCalendario() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -847,11 +820,7 @@ public class Interfaz extends JFrame {
 		return panel;
 	}
 
-	/**
-	 * Muestra las citas recibidas en la tabla del calendario y avisa si no hay ninguna.
-	 *
-	 * @param citas filas devueltas por las consultas de Barberia
-	 */
+	/** Muestra las citas recibidas en la tabla del calendario. */
 	private void mostrarCitasEnCalendario(ArrayList<String[]> citas) {
 		modeloCalendario.setRowCount(0);
 		for (int i = 0; i < citas.size(); i++) {
@@ -874,9 +843,7 @@ public class Interfaz extends JFrame {
 		}
 	}
 
-	// =========================================================================
-	// 5. PANEL LISTA DE ESPERA
-	// =========================================================================
+	// Panel de lista de espera.
 	/** Pestaña 5: clientes que esperan un espacio disponible. */
 	private JPanel crearPanelEspera() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -977,9 +944,7 @@ public class Interfaz extends JFrame {
 		}
 	}
 
-	// =========================================================================
-	// 6. PANEL HORARIO DE ATENCIÓN
-	// =========================================================================
+	// Panel de horario de atención.
 	/** Pestaña 6: días abiertos y horas de apertura/cierre de cada día. */
 	private JPanel crearPanelHorario() {
 		JPanel panel = new JPanel(new BorderLayout(10, 10));
@@ -994,7 +959,7 @@ public class Interfaz extends JFrame {
 			spnInicio[i] = new JSpinner(new SpinnerNumberModel(8, 0, 23, 1));
 			spnFin[i] = new JSpinner(new SpinnerNumberModel(18, 0, 24, 1));
 
-			// Al desmarcar abierto se pueden deshabilitar los spinners
+			// Al desmarcar un día se deshabilitan sus horas.
 			final int diaIndex = i;
 			chkAbierto[i].addActionListener(e -> {
 				boolean enc = chkAbierto[diaIndex].isSelected();
@@ -1043,10 +1008,7 @@ public class Interfaz extends JFrame {
 		return panel;
 	}
 
-	/**
-	 * Copia a los controles de la pestaña Horario los valores guardados en Barberia
-	 * y deshabilita las horas de los días cerrados.
-	 */
+	/** Copia a la pestaña de horario los valores guardados. */
 	private void cargarValoresHorario() {
 		try {
 			HorarioAtencion h = barberia.getHorario();
@@ -1067,13 +1029,7 @@ public class Interfaz extends JFrame {
 		}
 	}
 
-	/**
-	 * Envía el correo de confirmación o de recordatorio en un hilo aparte.
-	 *
-	 * Mientras el servidor SMTP responde, la ventana sigue usable (el cursor cambia a
-	 * reloj de arena). Al terminar, la tabla y los diálogos se actualizan en el hilo de
-	 * la interfaz con SwingUtilities.invokeLater.
-	 */
+	/** Envía el correo en un hilo aparte para no congelar la ventana. */
 	private void enviarNotificacion(String idCita, boolean esConfirmacion) {
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
@@ -1099,10 +1055,7 @@ public class Interfaz extends JFrame {
 		hilo.start();
 	}
 
-	/**
-	 * Muestra un mensaje de éxito y, si el guardado automático falló, añade la advertencia.
-	 * El cambio igual quedó aplicado en memoria, así que no se obliga a repetir la acción.
-	 */
+	/** Muestra un mensaje de éxito y avisa si falló el guardado automático. */
 	private void mostrarExito(String mensaje) {
 		String errorGuardado = barberia.getErrorGuardado();
 		if (errorGuardado == null) {
@@ -1115,12 +1068,7 @@ public class Interfaz extends JFrame {
 				"Guardado automático", JOptionPane.WARNING_MESSAGE);
 	}
 
-	/**
-	 * Punto de entrada de la aplicación: crea y muestra la ventana en el hilo de la
-	 * interfaz (EDT), que es lo que exige Swing.
-	 *
-	 * @param args argumentos de línea de comandos (no se usan)
-	 */
+	/** Punto de entrada de la aplicación. */
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
 			new Interfaz().setVisible(true);

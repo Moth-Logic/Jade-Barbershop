@@ -3,46 +3,30 @@ package logica;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * Servicio o corte ofrecido por la barbería.
- *
- * <p>La duración en minutos no es solo informativa: {@code control.Barberia} la usa para
- * calcular cuánto tiempo ocupa una cita y así evitar solapamientos con otras citas del
- * mismo día.</p>
- *
- * <p>El ID lo asigna la capa de control con un consecutivo propio.</p>
- */
+/** Servicio o corte ofrecido por la barbería. */
 public class TipoServicio implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** Identificador único del servicio (por ejemplo "0", "1", "2"). */
+    /** Identificador único del servicio. */
     private String id;
 
-    /** Nombre corto del servicio (por ejemplo "Corte clásico"). */
+    /** Nombre corto del servicio. */
     private String nombre;
 
-    /** Descripción para el catálogo. */
+    /** Descripción que se muestra en el catálogo. */
     private String descripcion;
 
     /** Precio en colones costarricenses. */
     private double precio;
 
-    /** Tiempo que ocupa el servicio; se usa al agendar citas y detectar solapamientos. */
+    /** Tiempo que ocupa el servicio y que se usa al agendar citas. */
     private int duracionMinutos;
 
-    /** Constructor vacío requerido por la serialización (guardado en disco). */
+    /** Constructor vacío que necesita la serialización. */
     public TipoServicio() {
     }
 
-    /**
-     * Crea un servicio recortando los espacios de los campos de texto.
-     *
-     * @param id              identificador asignado por la capa de control
-     * @param nombre          nombre del servicio
-     * @param descripcion     descripción para el catálogo
-     * @param precio          precio en colones (debe ser mayor que 0)
-     * @param duracionMinutos duración en minutos (debe ser mayor que 0)
-     */
+    /** Crea un servicio quitando los espacios sobrantes de los textos. */
     public TipoServicio(String id, String nombre, String descripcion, double precio, int duracionMinutos) {
         this.id = id != null ? id.trim() : "";
         this.nombre = nombre != null ? nombre.trim() : "";
@@ -51,102 +35,57 @@ public class TipoServicio implements Serializable {
         this.duracionMinutos = duracionMinutos;
     }
 
-    /**
-     * Devuelve el identificador del servicio.
-     *
-     * @return ID asignado por la capa de control
-     */
+    /** Devuelve el identificador del servicio. */
     public String getId() {
         return id;
     }
 
-    /**
-     * Cambia el identificador del servicio.
-     *
-     * @param id nuevo identificador (se recortan los espacios)
-     */
+    /** Cambia el identificador del servicio. */
     public void setId(String id) {
         this.id = id != null ? id.trim() : "";
     }
 
-    /**
-     * Devuelve el nombre del servicio.
-     *
-     * @return nombre del catálogo
-     */
+    /** Devuelve el nombre del servicio. */
     public String getNombre() {
         return nombre;
     }
 
-    /**
-     * Cambia el nombre del servicio.
-     *
-     * @param nombre nuevo nombre (se recortan los espacios)
-     */
+    /** Cambia el nombre del servicio. */
     public void setNombre(String nombre) {
         this.nombre = nombre != null ? nombre.trim() : "";
     }
 
-    /**
-     * Devuelve la descripción del servicio.
-     *
-     * @return descripción para el catálogo
-     */
+    /** Devuelve la descripción del servicio. */
     public String getDescripcion() {
         return descripcion;
     }
 
-    /**
-     * Cambia la descripción del servicio.
-     *
-     * @param descripcion nueva descripción (se recortan los espacios)
-     */
+    /** Cambia la descripción del servicio. */
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion != null ? descripcion.trim() : "";
     }
 
-    /**
-     * Devuelve el precio en colones costarricenses.
-     *
-     * @return precio del servicio
-     */
+    /** Devuelve el precio en colones costarricenses. */
     public double getPrecio() {
         return precio;
     }
 
-    /**
-     * Cambia el precio del servicio.
-     *
-     * @param precio nuevo precio en colones (mayor que 0)
-     */
+    /** Cambia el precio del servicio. */
     public void setPrecio(double precio) {
         this.precio = precio;
     }
 
-    /**
-     * Devuelve la duración en minutos.
-     *
-     * @return duración usada para calcular solapamientos
-     */
+    /** Devuelve la duración en minutos. */
     public int getDuracionMinutos() {
         return duracionMinutos;
     }
 
-    /**
-     * Cambia la duración del servicio.
-     *
-     * @param duracionMinutos nueva duración (mayor que 0)
-     */
+    /** Cambia la duración del servicio. */
     public void setDuracionMinutos(int duracionMinutos) {
         this.duracionMinutos = duracionMinutos;
     }
 
-    /**
-     * Dos servicios son iguales cuando comparten ID.
-     *
-     * @param o objeto a comparar
-     * @return {@code true} si los IDs coinciden
-     */
+    /** Dos servicios son iguales cuando tienen el mismo identificador. */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -155,21 +94,13 @@ public class TipoServicio implements Serializable {
         return Objects.equals(id, that.id);
     }
 
-    /**
-     * Hash coherente con {@link #equals(Object)}.
-     *
-     * @return código hash basado en el ID
-     */
+    /** Calcula el código hash a partir del identificador. */
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
 
-    /**
-     * Texto usado en las tablas y en los correos.
-     *
-     * @return "Nombre - ₡precio (duración min)"
-     */
+    /** Devuelve el texto que se usa en las tablas y en los correos. */
     @Override
     public String toString() {
         return nombre + " - ₡" + String.format("%.2f", precio) + " (" + duracionMinutos + " min)";

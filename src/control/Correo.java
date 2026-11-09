@@ -18,26 +18,7 @@ import java.util.Properties;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-/**
- * Cliente SMTP mínimo escrito únicamente con clases del JDK (sin librerías externas),
- * usado para enviar los correos de confirmación y de recordatorio de citas.
- *
- * ¿Cómo se configura?
- * <ul>
- *   <li>Con variables de entorno: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS,
- *       SMTP_FROM, SMTP_SSL y SMTP_STARTTLS.</li>
- *   <li>O con un archivo {@code smtp.properties} en la carpeta desde donde se ejecuta la
- *       aplicación (hay una plantilla en {@code smtp.properties.ejemplo}).</li>
- * </ul>
- * Las variables de entorno tienen prioridad sobre el archivo.
- *
- * Ejemplo típico con Gmail: SMTP_HOST=smtp.gmail.com, SMTP_PORT=587,
- * SMTP_STARTTLS=true, SMTP_USER=micuenta@gmail.com y SMTP_PASS con una
- * "contraseña de aplicación" (Gmail no acepta la contraseña normal).
- *
- * El envío es bloqueante porque habla el protocolo por red; por eso la interfaz
- * lo ejecuta en un hilo aparte y así no se congela la ventana.
- */
+/** Cliente SMTP básico que envía los correos del sistema. */
 public final class Correo {
 
     /** Archivo de configuración opcional que se busca en el directorio de trabajo. */
@@ -49,20 +30,11 @@ public final class Correo {
     /** SMTP exige CRLF como fin de línea, incluso si el sistema operativo es Windows. */
     private static final String FIN_DE_LINEA = "\r\n";
 
-    /** Evita que alguien cree instancias: la clase solo ofrece el método estático enviar(). */
+    /** Evita que se creen instancias de esta clase. */
     private Correo() {
     }
 
-    /**
-     * Envía un correo de texto plano (UTF-8) al destinatario indicado.
-     *
-     * @param destinatario correo del cliente (se valida el formato)
-     * @param asunto       asunto del mensaje (no puede tener saltos de línea)
-     * @param cuerpo       texto del mensaje
-     * @throws Exception si no hay configuración, si el servidor rechaza algún paso
-     *                   o si falla la conexión. El mensaje ya viene en español para
-     *                   mostrarlo tal cual en un JOptionPane.
-     */
+    /** Envía un correo de texto plano al destinatario indicado. */
     public static void enviar(String destinatario, String asunto, String cuerpo) throws Exception {
         String para = destinatario == null ? "" : destinatario.trim();
         if (!para.matches("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$"))
@@ -86,14 +58,9 @@ public final class Correo {
         enviarPorRed(config, para, asunto.trim(), cuerpo);
     }
 
-    // =========================================================================
-    // Protocolo SMTP
-    // =========================================================================
+    // Pasos del protocolo SMTP.
 
-    /**
-     * Abre la conexión, se presenta, autentica y Entrega el mensaje.
-     * Se cierra siempre la conexión al final (también si algo falla).
-     */
+    /** Abre la conexión, se autentica y entrega el mensaje. */
     private static void enviarPorRed(Config config, String destinatario, String asunto, String cuerpo)
             throws Exception {
 
@@ -105,17 +72,17 @@ public final class Correo {
             BufferedReader entrada = lector(conexion);
             BufferedWriter salida = escritor(conexion);
 
-            // 1) El servidor saluda con "220 ...".
+            // El servidor saluda al conectarse.
             esperar(leer(entrada), "saludo inicial del servidor", 220);
 
-            // 2) EHLO presenta el cliente; si el servidor es antiguo se cae a HELO.
+            // El cliente se presenta ante el servidor.
             Respuesta saludo = comando(salida, entrada, "EHLO " + dominioLocal(config));
             if (saludo.codigo != 250) {
                 saludo = comando(salida, entrada, "HELO " + dominioLocal(config));
             }
             esperar(saludo, "EHLO", 250);
 
-            // 3) STARTTLS: se cifra la conexión antes de mandar la contraseña.
+            // Se cifra la conexión antes de enviar la contraseña.
             if (!config.sslInmediato && config.startTls) {
                 esperar(comando(salida, entrada, "STARTTLS"), "STARTTLS", 220);
 
@@ -124,7 +91,7 @@ public final class Correo {
                         conexion, config.host, config.puerto, true);
                 seguro.startHandshake();
 
-                conexion = seguro; // el socket cifrado pasa a ser la conexión activa
+                conexion = seguro; // La conexión cifrada pasa a ser la activa.
                 entrada = lector(conexion);
                 salida = escritor(conexion);
 
@@ -132,8 +99,7 @@ public final class Correo {
                 esperar(comando(salida, entrada, "EHLO " + dominioLocal(config)), "EHLO tras STARTTLS", 250);
             }
 
-            // 4) Autenticación. Se intenta AUTH PLAIN y, si el servidor no lo soporta,
-            //    se usa AUTH LOGIN (usuario y contraseña en base64, cada uno en su línea).
+            // Se autentica el usuario con el método que acepte el servidor.
             if (config.usuario != null && !config.usuario.isEmpty()) {
                 String credenciales = base64("\u0000" + config.usuario + "\u0000" + config.clave);
                 Respuesta autenticacion = comando(salida, entrada, "AUTH PLAIN " + credenciales);
@@ -146,18 +112,18 @@ public final class Correo {
                 esperar(autenticacion, "autenticación", 235);
             }
 
-            // 5) Envelope: quién envía y quién recibe.
+            // Se indica quién envía y quién recibe el mensaje.
             esperar(comando(salida, entrada, "MAIL FROM:<" + config.remitente + ">"), "MAIL FROM", 250);
             esperar(comando(salida, entrada, "RCPT TO:<" + destinatario + ">"), "RCPT TO", 250, 251);
 
-            // 6) Cuerpo del mensaje: DATA termina con una línea que solo tiene un punto.
+            // Se envía el cuerpo del mensaje.
             esperar(comando(salida, entrada, "DATA"), "DATA", 354);
             salida.write(construirMensaje(config, destinatario, asunto, cuerpo));
             salida.write(FIN_DE_LINEA + "." + FIN_DE_LINEA);
             salida.flush();
             esperar(leer(entrada), "envío del mensaje", 250);
 
-            // 7) Despedida (si falla no importa: el correo ya fue aceptado).
+            // Se cierra la sesión, aunque el correo ya fue aceptado.
             try {
                 comando(salida, entrada, "QUIT");
             } catch (IOException ignorada) {
@@ -190,7 +156,7 @@ public final class Correo {
     }
 
     private static BufferedReader lector(Socket socket) throws IOException {
-        // ISO-8859-1 es seguro para las respuestas del protocolo (son ASCII).
+        // Las respuestas del protocolo son ASCII, así que este juego de caracteres es seguro.
         return new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1));
     }
 
@@ -206,10 +172,7 @@ public final class Correo {
         return leer(entrada);
     }
 
-    /**
-     * Lee una respuesta SMTP completa. Las respuestas de varias líneas usan el formato
-     * "250-primera", "250-segunda", "250 última": el guion indica que hay más líneas.
-     */
+    /** Lee una respuesta SMTP completa, aunque ocupe varias líneas. */
     private static Respuesta leer(BufferedReader entrada) throws IOException {
         StringBuilder texto = new StringBuilder();
         int codigo;
@@ -234,7 +197,7 @@ public final class Correo {
         return new Respuesta(codigo, texto.toString().trim());
     }
 
-    /** Comprueba que el código de respuesta sea uno de los esperados; si no, lanza el error. */
+    /** Comprueba que el código de respuesta sea el esperado y lanza el error si no lo es. */
     private static void esperar(Respuesta respuesta, String etapa, int... codigosEsperados) throws Exception {
         for (int codigo : codigosEsperados) {
             if (respuesta.codigo == codigo)
@@ -244,14 +207,9 @@ public final class Correo {
                 + respuesta.texto);
     }
 
-    // =========================================================================
-    // Construcción del mensaje
-    // =========================================================================
+    // Construcción del mensaje.
 
-    /**
-     * Arma las cabeceras MIME y el cuerpo en base64 (así se evitan problemas con
-     * acentos, con líneas largas y con líneas que empiezan por punto).
-     */
+    /** Arma las cabeceras y el cuerpo del mensaje en base64. */
     private static String construirMensaje(Config config, String destinatario, String asunto, String cuerpo) {
         String cuerpoCodificado = Base64.getMimeEncoder(76, FIN_DE_LINEA.getBytes(StandardCharsets.US_ASCII))
                 .encodeToString(cuerpo.getBytes(StandardCharsets.UTF_8));
@@ -271,7 +229,7 @@ public final class Correo {
         return mensaje.toString();
     }
 
-    /** Devuelve "Nombre <correo>", quitando saltos de línea por seguridad. */
+    /** Devuelve el remitente con su nombre y sin saltos de línea. */
     private static String remitenteConNombre(Config config) {
         String correo = limpiarCabecera(config.remitente);
         String nombre = limpiarCabecera(config.nombreRemitente);
@@ -280,10 +238,7 @@ public final class Correo {
         return "\"" + nombre + "\" <" + correo + ">";
     }
 
-    /**
-     * Los asuntos con acentos o símbolos se codifican como "=?UTF-8?B?<base64>?=",
-     * que es lo que entienden los clientes de correo.
-     */
+    /** Codifica el asunto cuando tiene acentos o símbolos. */
     private static String codificarAsunto(String asunto) throws IllegalArgumentException {
         boolean necesitaCodificar = asunto.chars().anyMatch(c -> c > 127);
         if (!necesitaCodificar)
@@ -295,14 +250,14 @@ public final class Correo {
         return Base64.getEncoder().encodeToString(texto.getBytes(StandardCharsets.UTF_8));
     }
 
-    /** Elimina \r y \n para que nadie pueda inyectar cabeceras SMTP adicionales. */
+    /** Quita los saltos de línea para evitar que se inyecten cabeceras. */
     private static String limpiarCabecera(String valor) {
         if (valor == null)
             return "";
         return valor.replace("\r", " ").replace("\n", " ").trim();
     }
 
-    /** Dominio que se usa al presentarse con EHLO; solo informativo para el servidor. */
+    /** Devuelve el dominio con el que el cliente se presenta ante el servidor. */
     private static String dominioLocal(Config config) {
         String correo = config.remitente == null ? "" : config.remitente;
         int arroba = correo.indexOf('@');
@@ -311,11 +266,9 @@ public final class Correo {
         return "localhost";
     }
 
-    // =========================================================================
-    // Configuración
-    // =========================================================================
+    // Lectura de la configuración.
 
-    /** Estructura interna con los datos necesarios para conectarse al servidor SMTP. */
+    /** Datos necesarios para conectarse al servidor SMTP. */
     private static final class Config {
         String host;
         int puerto = 587;
@@ -323,11 +276,11 @@ public final class Correo {
         String clave = "";
         String remitente;
         String nombreRemitente = "Jade Barbershop";
-        boolean sslInmediato;   // true para el puerto 465 (TLS desde el inicio)
-        boolean startTls = true; // true para el puerto 587 (cifra después de conectar)
+        boolean sslInmediato;   // Indica si el cifrado empieza desde el primer byte.
+        boolean startTls = true; // Indica si el cifrado empieza después de conectar.
     }
 
-    /** Respuesta del servidor: código numérico de 3 dígitos y texto explicativo. */
+    /** Respuesta del servidor con su código y su texto. */
     private static final class Respuesta {
         final int codigo;
         final String texto;
@@ -338,10 +291,7 @@ public final class Correo {
         }
     }
 
-    /**
-     * Lee la configuración: primero las variables de entorno y después
-     * smtp.properties (si existe). Las variables de entorno ganan.
-     */
+    /** Lee la configuración del entorno y del archivo smtp.properties. */
     private static Config cargarConfiguracion() throws Exception {
         Properties propiedades = new Properties();
         File archivo = new File(ARCHIVO_CONFIG);

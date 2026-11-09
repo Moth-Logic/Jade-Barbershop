@@ -14,18 +14,7 @@ import java.util.List;
 import logica.Cita;
 import logica.Cliente;
 import logica.HorarioAtencion;
-import logica.TipoServicio;
-
-/**
- * Núcleo del sistema (capa de control).
- *
- * Aquí viven las listas de clientes, citas, tipos de servicio y lista de espera, junto
- * con todas las reglas del negocio: qué datos son válidos, cuándo se puede borrar algo,
- * qué citas se cruzan en el tiempo y cómo se guardan los datos en disco.
- *
- * La interfaz gráfica nunca modifica las listas directamente: solo llama a estos
- * métodos y muestra los mensajes de error que se lanzan desde aquí.
- */
+import logica.TipoServicio;	/** Núcleo del sistema con las listas de datos y las reglas del negocio. */
 public class Barberia implements Serializable {
 
 	/** Versión de la clase usada por la serialización; cambiarla invalida archivos viejos. */
@@ -34,7 +23,7 @@ public class Barberia implements Serializable {
 	/** Archivo donde se guarda el estado completo (serialización binaria de Java). */
 	private static final String ARCHIVO_DAT = "barberia.dat";
 
-	/** Ruta alternativa usada cuando existe la carpeta "state" en el proyecto. */
+	/** Ruta alternativa que se usa cuando existe la carpeta state. */
 	private static final String ARCHIVO_STATE = "state" + File.separator + "barberia.dat";
 
 	/** Formato de fecha usado en los correos que se envían a los clientes. */
@@ -64,15 +53,10 @@ public class Barberia implements Serializable {
 	/** Catálogo de servicios con precio y duración. */
 	private List<TipoServicio> tiposServicio;
 
-	/** Último error del guardado automático, o {@code null} si todo salió bien. */
+	/** Último error del guardado automático, o nulo si todo salió bien. */
 	private String errorGuardado;
 
-	/**
-	 * Crea una barbería vacía; después se puede llamar a cargar() para recuperar los
-	 * datos guardados en disco.
-	 *
-	 * @param nombre nombre comercial de la barbería (por ejemplo "Jade Barbershop")
-	 */
+	/** Crea una barbería vacía con su horario por defecto. */
 	public Barberia(String nombre) {
 		this.nombre = nombre;
 		this.horario = new HorarioAtencion();
@@ -82,15 +66,7 @@ public class Barberia implements Serializable {
 		this.tiposServicio = new ArrayList<>();
 	}
 
-	/**
-	 * Reglas mínimas de un cliente: nombre, teléfono de exactamente 8 dígitos y correo
-	 * con formato válido. Se reutiliza al crear y al modificar para no duplicar código.
-	 *
-	 * @param nombre nombre completo (no puede estar vacío)
-	 * @param tel    teléfono de 8 dígitos
-	 * @param email  correo con formato válido
-	 * @throws Exception si algún dato no cumple las reglas
-	 */
+	/** Comprueba que el nombre, el teléfono y el correo de un cliente sean válidos. */
 	public void validarCliente(String nombre, String tel, String email) throws Exception {
 		if (nombre == null || nombre.trim().isEmpty())
 			throw new Exception("El nombre no puede estar vacío.");
@@ -102,15 +78,7 @@ public class Barberia implements Serializable {
 			throw new Exception("El formato del correo electrónico es inválido.");
 	}
 
-	/**
-	 * Registra un cliente nuevo. El correo es la llave primaria, así que no se puede
-	 * repetir.
-	 *
-	 * @param nombreCompleto nombre y apellidos
-	 * @param tel            teléfono de 8 dígitos
-	 * @param email          correo único del cliente
-	 * @throws Exception si los datos son inválidos o el correo ya existe
-	 */
+	/** Registra un cliente nuevo sin repetir el correo. */
 	public void crearCliente(String nombreCompleto, String tel, String email) throws Exception {
 		validarCliente(nombreCompleto, tel, email);
 
@@ -126,17 +94,7 @@ public class Barberia implements Serializable {
 		autoguardar();
 	}
 
-	/**
-	 * Modifica un cliente buscándolo por su correo actual. Si se cambia el correo, se
-	 * verifica que el nuevo no pertenezca ya a otro cliente.
-	 *
-	 * @param email          correo actual, que sirve para localizar al cliente
-	 * @param nombreCompleto nuevo nombre y apellidos
-	 * @param tel            nuevo teléfono de 8 dígitos
-	 * @param emailNuevo     nuevo correo (puede ser el mismo)
-	 * @throws Exception si el cliente no existe, los datos son inválidos o el correo
-	 *                   nuevo ya está registrado
-	 */
+	/** Modifica un cliente buscándolo por su correo actual. */
 	public void modificarCliente(String email, String nombreCompleto, String tel, String emailNuevo) throws Exception {
 		if (clientes.isEmpty())
 			throw new Exception("No hay clientes registrados actualmente.");
@@ -159,14 +117,7 @@ public class Barberia implements Serializable {
 		autoguardar();
 	}
 
-	/**
-	 * Borra un cliente solo si no tiene citas de hoy en adelante ni está en la lista de
-	 * espera, para no dejar citas apuntando a un cliente que ya no existe.
-	 *
-	 * @param email correo del cliente a borrar
-	 * @throws Exception si el correo es inválido, el cliente no existe o tiene citas o
-	 *                   espera pendientes
-	 */
+	/** Borra un cliente solo si no tiene citas futuras ni está en la lista de espera. */
 	public void borrarCliente(String email) throws Exception {
 		if (clientes.isEmpty())
 			throw new Exception("No hay clientes registrados actualmente.");
@@ -201,13 +152,7 @@ public class Barberia implements Serializable {
 		throw new Exception("Cliente no encontrado.");
 	}
 
-	/**
-	 * Busca un cliente por correo (sin distinguir mayúsculas).
-	 *
-	 * @param email correo del cliente
-	 * @return cliente encontrado
-	 * @throws Exception si el correo es nulo o no corresponde a ningún cliente
-	 */
+	/** Busca un cliente por su correo. */
 	public Cliente consultarCliente(String email) throws Exception {
 		if (email == null)
 			throw new Exception("El correo no puede ser nulo.");
@@ -221,12 +166,7 @@ public class Barberia implements Serializable {
 		throw new Exception("Cliente no encontrado con el correo: " + email);
 	}
 
-	/**
-	 * Devuelve los clientes como filas de texto listas para la tabla de la interfaz.
-	 *
-	 * @return filas con nombre, teléfono y correo
-	 * @throws Exception si ocurre un problema al preparar los datos
-	 */
+	/** Devuelve los clientes en filas listas para la tabla. */
 	public ArrayList<String[]> listarClientes() throws Exception {
 		ArrayList<String[]> clientela = new ArrayList<>();
 		for (int i = 0; i < clientes.size(); i++) {
@@ -240,7 +180,7 @@ public class Barberia implements Serializable {
 		return clientela;
 	}
 
-	/** Reglas de una cita: fecha no pasada, hora 0-23, dentro del horario y cliente/servicio existentes. */
+	/** Comprueba que la fecha, la hora, el cliente y el servicio de una cita sean válidos. */
 	private void validarCita(String id, LocalDate fecha, int hora, String emailCliente, String idTipoServicio) throws Exception {
 		if (id != null && !id.isEmpty() && !id.equals("0") && !id.matches("^[0-9]+$"))
 			throw new Exception("ID de cita inválido.");
@@ -265,20 +205,10 @@ public class Barberia implements Serializable {
 			throw new Exception("ID de servicio inválido.");
 	}
 
-	/**
-	 * Evita que dos citas ocupen el mismo espacio de tiempo.
-	 *
-	 * Una cita no dura una hora fija: dura lo que indique el servicio contratado (por
-	 * ejemplo 45 o 90 minutos). Por eso no basta con comparar la hora exacta: se calcula
-	 * el rango [hora, hora + duración) de la cita nueva y se verifica que no se cruce con
-	 * el rango de ninguna cita ya agendada ese mismo día.
-	 *
-	 * @param idExcluido ID de la cita que se está modificando (null al crear una nueva),
-	 *                   para que una cita no se compare consigo misma.
-	 */
+	/** Comprueba que la cita nueva no se cruce con otra del mismo día. */
 	private void validarSolapamiento(LocalDate fecha, int hora, TipoServicio servicio, String idExcluido)
 			throws Exception {
-		// Se trabaja en minutos desde la medianoche: 9:00 -> 540.
+		// Se trabaja en minutos desde la medianoche.
 		int inicioNueva = hora * 60;
 		int duracionNueva = servicio != null ? Math.max(1, servicio.getDuracionMinutos()) : 60;
 		int finNueva = inicioNueva + duracionNueva;
@@ -311,45 +241,24 @@ public class Barberia implements Serializable {
 		return String.format("%02d:%02d", (minutos / 60) % 24, minutos % 60);
 	}
 
-	/**
-	 * Agenda una cita nueva. Valida los datos, comprueba que el horario esté libre según
-	 * la duración del servicio y guarda el cambio en disco.
-	 *
-	 * @param fecha           día de la cita (hoy o posterior)
-	 * @param hora            hora de inicio (0 a 23)
-	 * @param emailCliente    correo de un cliente registrado
-	 * @param idTipoServicio  ID de un servicio registrado
-	 * @throws Exception si los datos son inválidos, la barbería está cerrada o la cita
-	 *                   se cruza con otra
-	 */
+	/** Agenda una cita nueva y guarda el cambio en disco. */
 	public void crearCita(LocalDate fecha, int hora, String emailCliente, String idTipoServicio) throws Exception {
 		validarCita("0", fecha, hora, emailCliente, idTipoServicio);
 
-		// El cliente y el servicio deben existir antes de revisar choques de horario,
-		// porque la duración del servicio es la que define cuánto ocupa la cita.
+		// El servicio define cuánto dura la cita, así que debe existir antes de revisar choques.
 		Cliente cliente = consultarCliente(emailCliente);
 		TipoServicio tipoServicio = consultarTipoServicio(idTipoServicio);
 
 		validarSolapamiento(fecha, hora, tipoServicio, null);
 
-		// El ID sale de un consecutivo propio; los IDs borrados no se reutilizan.
+		// El identificador sale de un consecutivo propio y no se reutiliza.
 		String id = String.valueOf(consecutivoCita++);
 		Cita cita = new Cita(id, fecha, hora, cliente, tipoServicio);
 		this.citas.add(cita);
 		autoguardar();
 	}
 
-	/**
-	 * Reprograma o cambia los datos de una cita existente. El solapamiento se vuelve a
-	 * revisar contra las demás citas, excluyendo la propia.
-	 *
-	 * @param id              ID de la cita a modificar
-	 * @param fecha           nueva fecha
-	 * @param hora            nueva hora de inicio (0 a 23)
-	 * @param emailCliente    correo del cliente
-	 * @param idTipoServicio  ID del servicio
-	 * @throws Exception si la cita no existe, los datos son inválidos o se cruza con otra
-	 */
+	/** Cambia los datos de una cita existente y vuelve a revisar el solapamiento. */
 	public void modificarCita(String id, LocalDate fecha, int hora, String emailCliente, String idTipoServicio) throws Exception {
 		if (citas.isEmpty())
 			throw new Exception("No hay citas registradas actualmente.");
@@ -369,12 +278,7 @@ public class Barberia implements Serializable {
 		autoguardar();
 	}
 
-	/**
-	 * Cancela y elimina una cita.
-	 *
-	 * @param id identificador de la cita
-	 * @throws Exception si el ID es inválido o la cita no existe
-	 */
+	/** Cancela y elimina una cita. */
 	public void borrarCita(String id) throws Exception {
 		if (citas.isEmpty())
 			throw new Exception("No hay citas registradas actualmente.");
@@ -392,13 +296,7 @@ public class Barberia implements Serializable {
 		throw new Exception("Cita no encontrada.");
 	}
 
-	/**
-	 * Busca una cita por ID.
-	 *
-	 * @param id identificador de la cita
-	 * @return cita encontrada
-	 * @throws Exception si el ID es nulo o no corresponde a ninguna cita
-	 */
+	/** Busca una cita por su identificador. */
 	public Cita consultarCita(String id) throws Exception {
 		if (id == null)
 			throw new Exception("ID no puede ser nulo.");
@@ -412,12 +310,7 @@ public class Barberia implements Serializable {
 		throw new Exception("Cita no encontrada con ID: " + id);
 	}
 
-	/**
-	 * Marca una cita como confirmada sin enviar correo (el botón "Confirmar Cita").
-	 *
-	 * @param id identificador de la cita
-	 * @throws Exception si la cita no existe
-	 */
+	/** Marca una cita como confirmada sin enviar correo. */
 	public void confirmarCita(String id) throws Exception {
 		if (citas.isEmpty())
 			throw new Exception("No hay citas registradas actualmente.");
@@ -427,12 +320,7 @@ public class Barberia implements Serializable {
 		autoguardar();
 	}
 
-	/**
-	 * Devuelve todas las citas como filas de texto para la tabla de la interfaz.
-	 *
-	 * @return filas con ID, fecha, hora, cliente, servicio y estado
-	 * @throws Exception si ocurre un problema al preparar los datos
-	 */
+	/** Devuelve todas las citas en filas listas para la tabla. */
 	public ArrayList<String[]> listarCitas() throws Exception {
 		ArrayList<String[]> citaciones = new ArrayList<>();
 		for (int i = 0; i < citas.size(); i++) {
@@ -450,24 +338,12 @@ public class Barberia implements Serializable {
 		return citaciones;
 	}
 
-	/**
-	 * Alias de {@link #listarCitas()} conservado por compatibilidad con llamadas
-	 * anteriores. Se recomienda usar el método en minúscula.
-	 *
-	 * @return filas de texto con todas las citas
-	 * @throws Exception si ocurre un problema al leer las citas
-	 */
+	/** Alias de listarCitas que se mantiene por compatibilidad. */
 	public ArrayList<String[]> ListarCitas() throws Exception {
 		return listarCitas();
 	}
 
-	/**
-	 * Devuelve las citas de un día concreto.
-	 *
-	 * @param fecha día a consultar
-	 * @return filas de texto listas para la tabla del calendario
-	 * @throws Exception si ocurre un problema al leer las citas
-	 */
+	/** Devuelve las citas de un día concreto en filas listas para la tabla. */
 	public ArrayList<String[]> getCitasPorFecha(LocalDate fecha) throws Exception {
 		ArrayList<String[]> citaciones = new ArrayList<>();
 		if (fecha == null) return citaciones;
@@ -489,13 +365,7 @@ public class Barberia implements Serializable {
 		return citaciones;
 	}
 
-	/**
-	 * Devuelve las citas de los 7 días que empiezan en la fecha indicada (incluida).
-	 *
-	 * @param fechaInicio primer día del período
-	 * @return filas de texto con las citas del período
-	 * @throws Exception si ocurre un problema al leer las citas
-	 */
+	/** Devuelve las citas de los siete días que empiezan en la fecha indicada. */
 	public ArrayList<String[]> getCitasSemana(LocalDate fechaInicio) throws Exception {
 		ArrayList<String[]> citaciones = new ArrayList<>();
 		if (fechaInicio == null) return citaciones;
@@ -510,13 +380,7 @@ public class Barberia implements Serializable {
 		return citaciones;
 	}
 
-	/**
-	 * Devuelve las citas del mes siguiente a partir de la fecha indicada (incluida).
-	 *
-	 * @param fechaInicio primer día del período
-	 * @return filas de texto con las citas del período
-	 * @throws Exception si ocurre un problema al leer las citas
-	 */
+	/** Devuelve las citas del mes que empieza en la fecha indicada. */
 	public ArrayList<String[]> getCitasMes(LocalDate fechaInicio) throws Exception {
 		ArrayList<String[]> citaciones = new ArrayList<>();
 		if (fechaInicio == null) return citaciones;
@@ -531,7 +395,7 @@ public class Barberia implements Serializable {
 		return citaciones;
 	}
 
-	/** Reglas de un servicio: nombre y descripción con texto, precio y duración positivos. */
+	/** Comprueba que los datos de un servicio sean válidos. */
 	private void validarTipoServicio(String id, String nombre, String descripcion, double precio, int duracionMinutos) throws Exception {
 		if (id != null && !id.isEmpty() && !id.equals("0") && !id.matches("^[0-9]+$"))
 			throw new Exception("ID de servicio inválido.");
@@ -549,15 +413,7 @@ public class Barberia implements Serializable {
 			throw new Exception("La duración debe ser mayor a 0 minutos.");
 	}
 
-	/**
-	 * Agrega un servicio al catálogo y guarda el cambio en disco.
-	 *
-	 * @param nombre          nombre del servicio
-	 * @param descripcion     descripción para el catálogo
-	 * @param precio          precio en colones (mayor que 0)
-	 * @param duracionMinutos duración en minutos (mayor que 0)
-	 * @throws Exception si los datos no cumplen las reglas de validación
-	 */
+	/** Agrega un servicio al catálogo y guarda el cambio en disco. */
 	public void crearTipoServicio(String nombre, String descripcion, double precio, int duracionMinutos) throws Exception {
 		validarTipoServicio("0", nombre, descripcion, precio, duracionMinutos);
 
@@ -567,16 +423,7 @@ public class Barberia implements Serializable {
 		autoguardar();
 	}
 
-	/**
-	 * Actualiza un servicio existente manteniendo su ID.
-	 *
-	 * @param id              identificador del servicio
-	 * @param nombre          nuevo nombre
-	 * @param descripcion     nueva descripción
-	 * @param precio          nuevo precio en colones (mayor que 0)
-	 * @param duracionMinutos nueva duración en minutos (mayor que 0)
-	 * @throws Exception si el servicio no existe o los datos son inválidos
-	 */
+	/** Actualiza un servicio existente sin cambiar su identificador. */
 	public void modificarTipoServicio(String id, String nombre, String descripcion, double precio, int duracionMinutos) throws Exception {
 		if (tiposServicio.isEmpty())
 			throw new Exception("No hay servicios registrados actualmente.");
@@ -591,12 +438,7 @@ public class Barberia implements Serializable {
 		autoguardar();
 	}
 
-	/**
-	 * Elimina un servicio del catálogo solo si ninguna cita lo está usando.
-	 *
-	 * @param id identificador del servicio
-	 * @throws Exception si el servicio no existe o está asociado a una cita
-	 */
+	/** Elimina un servicio solo si ninguna cita lo está usando. */
 	public void borrarTipoServicio(String id) throws Exception {
 		if (tiposServicio.isEmpty())
 			throw new Exception("No hay servicios registrados actualmente.");
@@ -623,13 +465,7 @@ public class Barberia implements Serializable {
 		throw new Exception("Servicio no encontrado.");
 	}
 
-	/**
-	 * Busca un servicio por ID y falla si no existe.
-	 *
-	 * @param id identificador del servicio
-	 * @return servicio encontrado
-	 * @throws Exception si el ID es nulo o no corresponde a ningún servicio
-	 */
+	/** Busca un servicio por su identificador. */
 	public TipoServicio consultarTipoServicio(String id) throws Exception {
 		if (id == null)
 			throw new Exception("ID no puede ser nulo.");
@@ -643,12 +479,7 @@ public class Barberia implements Serializable {
 		throw new Exception("Servicio no encontrado con ID: " + id);
 	}
 
-	/**
-	 * Devuelve el catálogo de servicios como filas de texto para la tabla.
-	 *
-	 * @return filas con ID, nombre, descripción, precio y duración
-	 * @throws Exception si ocurre un problema al preparar los datos
-	 */
+	/** Devuelve el catálogo de servicios en filas listas para la tabla. */
 	public ArrayList<String[]> listarTiposServicio() throws Exception {
 		ArrayList<String[]> servicios = new ArrayList<>();
 		for (int i = 0; i < tiposServicio.size(); i++) {
@@ -665,13 +496,7 @@ public class Barberia implements Serializable {
 		return servicios;
 	}
 
-	/**
-	 * Agrega un cliente a la lista de espera. No se permiten duplicados.
-	 * La lista se ordena por nombre para que sea fácil de leer.
-	 *
-	 * @param emailCliente correo del cliente registrado
-	 * @throws Exception si el cliente no existe o ya está en la lista
-	 */
+	/** Agrega un cliente a la lista de espera sin repetirlo. */
 	public void agregarAListaEspera(String emailCliente) throws Exception {
 		Cliente cliente = consultarCliente(emailCliente);
 
@@ -682,17 +507,12 @@ public class Barberia implements Serializable {
 		}
 
 		this.listaEspera.add(cliente);
-		// Se ordena por nombre (compareTo de Cliente) para que la lista sea fácil de leer.
+		// Se ordena por nombre para que la lista sea fácil de leer.
 		this.listaEspera.sort(null);
 		autoguardar();
 	}
 
-	/**
-	 * Saca a un cliente de la lista de espera y guarda el cambio en disco.
-	 *
-	 * @param emailCliente correo del cliente a retirar
-	 * @throws Exception si el correo es nulo o el cliente no está en la lista
-	 */
+	/** Saca a un cliente de la lista de espera y guarda el cambio. */
 	public void eliminarDeListaEspera(String emailCliente) throws Exception {
 		if (emailCliente == null)
 			throw new Exception("Correo no puede ser nulo.");
@@ -717,18 +537,13 @@ public class Barberia implements Serializable {
 		}
 	}
 
-	/**
-	 * Devuelve la lista de espera numerada (turno 1, 2, ...) para la tabla.
-	 *
-	 * @return filas con turno, nombre, teléfono y correo
-	 * @throws Exception si ocurre un problema al preparar los datos
-	 */
+	/** Devuelve la lista de espera numerada en filas listas para la tabla. */
 	public ArrayList<String[]> mostrarListaEspera() throws Exception {
 		ArrayList<String[]> enEspera = new ArrayList<>();
 		for (int i = 0; i < listaEspera.size(); i++) {
 			Cliente c = listaEspera.get(i);
 			String[] datos = {
-				String.valueOf(i + 1), // Posición en la lista
+				String.valueOf(i + 1), // Número de turno.
 				c.getNombreCompleto(),
 				c.getTelefono(),
 				c.getEmail()
@@ -738,30 +553,17 @@ public class Barberia implements Serializable {
 		return enEspera;
 	}
 
-	/**
-	 * Cambia el horario de un día y lo guarda en disco.
-	 *
-	 * @param dia     día de la semana (0 = lunes ... 6 = domingo)
-	 * @param abierto {@code true} si la barbería abre ese día
-	 * @param inicio  hora de apertura (0 a 23)
-	 * @param fin     hora de cierre (0 a 24, exclusiva)
-	 * @throws Exception si el día, las horas o el rango son inválidos
-	 */
+	/** Cambia el horario de un día y lo guarda en disco. */
 	public void setHorario(int dia, boolean abierto, int inicio, int fin) throws Exception {
 		if (horario == null) {
 			horario = new HorarioAtencion();
 		}
-		// Cada día se valida dentro de HorarioAtencion (inicio < fin, rangos 0-24).
+		// HorarioAtencion valida las horas y el rango antes de guardar.
 		horario.setDia(dia, abierto, inicio, fin);
 		autoguardar();
 	}
 
-	/**
-	 * Devuelve el horario de atención, creándolo por defecto si todavía no existe
-	 * (por ejemplo al abrir la aplicación sin datos guardados).
-	 *
-	 * @return horario semanal vigente
-	 */
+	/** Devuelve el horario de atención y lo crea por defecto si no existe. */
 	public HorarioAtencion getHorario() {
 		if (horario == null) {
 			horario = new HorarioAtencion();
@@ -769,18 +571,7 @@ public class Barberia implements Serializable {
 		return horario;
 	}
 
-	/**
-	 * Envía un correo real de confirmación al cliente de la cita y, solo si el envío
-	 * funciona, marca la cita como confirmada.
-	 *
-	 * El correo sale por el servidor SMTP configurado en las variables de entorno o en
-	 * smtp.properties (ver Correo). Si el envío falla, la excepción se propaga y la cita
-	 * queda pendiente: así el estado de la cita refleja lo que realmente ocurrió.
-	 *
-	 * @param idCita ID de la cita a confirmar
-	 * @return mensaje de éxito con el correo del destinatario
-	 * @throws Exception si la cita no existe, no tiene correo o falla el envío
-	 */
+	/** Envía el correo de confirmación y marca la cita como confirmada solo si el envío funciona. */
 	public String enviarConfirmacion(String idCita) throws Exception {
 		Cita cita = consultarCita(idCita);
 		Cliente cliente = clienteConCorreo(cita);
@@ -793,13 +584,7 @@ public class Barberia implements Serializable {
 		return "Confirmación enviada exitosamente a: " + cliente.getEmail();
 	}
 
-	/**
-	 * Envía un correo real de recordatorio. No cambia el estado de la cita.
-	 *
-	 * @param idCita ID de la cita a recordar
-	 * @return mensaje de éxito con el correo del destinatario
-	 * @throws Exception si la cita no existe, no tiene correo o falla el envío
-	 */
+	/** Envía el correo de recordatorio sin cambiar el estado de la cita. */
 	public String enviarRecordatorio(String idCita) throws Exception {
 		Cita cita = consultarCita(idCita);
 		Cliente cliente = clienteConCorreo(cita);
@@ -810,7 +595,7 @@ public class Barberia implements Serializable {
 		return "Recordatorio enviado exitosamente a: " + cliente.getEmail();
 	}
 
-	/** Devuelve el cliente de la cita verificando que tenga un correo utilizable. */
+	/** Devuelve el cliente de la cita y comprueba que tenga correo. */
 	private Cliente clienteConCorreo(Cita cita) throws Exception {
 		Cliente cliente = cita.getCliente();
 		if (cliente == null || cliente.getEmail() == null || cliente.getEmail().trim().isEmpty())
@@ -843,20 +628,9 @@ public class Barberia implements Serializable {
 		return cuerpo.toString();
 	}
 
-	// =========================================================================
-	// Guardado automático
-	// =========================================================================
+	// Guardado automático.
 
-	/**
-	 * Guarda el estado después de cada cambio (cliente, cita, servicio, espera u horario).
-	 *
-	 * Así, si la aplicación se cierra de golpe o el equipo se apaga, no se pierde lo hecho
-	 * durante la sesión. El cierre normal de la ventana sigue llamando a guardar() y
-	 * avisando con un diálogo si hubo un error.
-	 *
-	 * Si el guardado falla, el cambio ya está aplicado en memoria: se conserva el mensaje
-	 * en errorGuardado para que la interfaz pueda advertirlo.
-	 */
+	/** Guarda el estado después de cada cambio y conserva el error si falla. */
 	private void autoguardar() {
 		try {
 			guardar();
@@ -867,11 +641,7 @@ public class Barberia implements Serializable {
 		}
 	}
 
-	/**
-	 * Devuelve el último error del guardado automático.
-	 *
-	 * @return mensaje de error, o {@code null} si el último guardado salió bien
-	 */
+	/** Devuelve el último error del guardado automático, o nulo si todo salió bien. */
 	public String getErrorGuardado() {
 		return errorGuardado;
 	}
@@ -881,10 +651,7 @@ public class Barberia implements Serializable {
 		errorGuardado = null;
 	}
 
-	/**
-	 * Decide dónde guardar: si existe la carpeta "state" se usa esa, si no la raíz del
-	 * proyecto. Se prefiere "state" porque el .gitignore ya la excluye del repositorio.
-	 */
+	/** Elige entre la carpeta state y la raíz del proyecto para guardar los datos. */
 	private File obtenerArchivoGuardado() {
 		File dirState = new File("state");
 		if (dirState.exists() && dirState.isDirectory()) {
@@ -893,11 +660,7 @@ public class Barberia implements Serializable {
 		return new File(ARCHIVO_DAT);
 	}
 
-	/**
-	 * Escribe todo el objeto Barberia en disco mediante serialización de Java.
-	 *
-	 * @throws Exception si no se puede crear o escribir el archivo de datos
-	 */
+	/** Escribe toda la barbería en disco. */
 	public void guardar() throws Exception {
 		File archivo = obtenerArchivoGuardado();
 		try (ObjectOutputStream salida = new ObjectOutputStream(new FileOutputStream(archivo))) {
@@ -905,19 +668,14 @@ public class Barberia implements Serializable {
 		}
 	}
 
-	/**
-	 * Recupera el estado guardado. Si no hay archivo, la barbería arranca vacía.
-	 * Busca primero en "state/" y luego en la raíz del proyecto.
-	 *
-	 * @throws Exception si el archivo existe pero no se puede leer o está corrupto
-	 */
+	/** Recupera el estado guardado y deja la barbería vacía si no hay archivo. */
 	public void cargar() throws Exception {
 		File archivoState = new File(ARCHIVO_STATE);
 		File archivoRaiz = new File(ARCHIVO_DAT);
 		File archivoACargar = archivoState.exists() ? archivoState : (archivoRaiz.exists() ? archivoRaiz : null);
 
 		if (archivoACargar == null) {
-			return; // No hay archivo previo, inicia con estado limpio
+			return; // No hay archivo previo.
 		}
 
 		try (ObjectInputStream entrada = new ObjectInputStream(new FileInputStream(archivoACargar))) {
@@ -934,52 +692,29 @@ public class Barberia implements Serializable {
 		}
 	}
 
-	// =========================================================================
-	// Getters auxiliares para vistas y modelos de la GUI
-	// =========================================================================
+	// Getters auxiliares para la interfaz.
 
-	/**
-	 * Devuelve el nombre comercial de la barbería.
-	 *
-	 * @return nombre usado en la ventana y en los correos
-	 */
+	/** Devuelve el nombre comercial de la barbería. */
 	public String getNombre() {
 		return nombre;
 	}
 
-	/**
-	 * Devuelve la lista viva de clientes. La interfaz solo la usa para lectura; para
-	 * modificar datos hay que llamar a los métodos CRUD de esta clase.
-	 *
-	 * @return lista de clientes registrados
-	 */
+	/** Devuelve la lista de clientes registrados. */
 	public List<Cliente> getClientes() {
 		return clientes;
 	}
 
-	/**
-	 * Devuelve la lista de clientes en espera.
-	 *
-	 * @return clientes ordenados por nombre
-	 */
+	/** Devuelve los clientes en espera, ordenados por nombre. */
 	public List<Cliente> getListaEspera() {
 		return listaEspera;
 	}
 
-	/**
-	 * Devuelve todas las citas registradas.
-	 *
-	 * @return lista de citas
-	 */
+	/** Devuelve todas las citas registradas. */
 	public List<Cita> getCitas() {
 		return citas;
 	}
 
-	/**
-	 * Devuelve el catálogo de tipos de servicio.
-	 *
-	 * @return lista de servicios
-	 */
+	/** Devuelve el catálogo de tipos de servicio. */
 	public List<TipoServicio> getTiposServicio() {
 		return tiposServicio;
 	}
