@@ -1,0 +1,261 @@
+==========================================================================
+ JADE BARBERSHOP - GUIA DE USO
+ Sistema de escritorio para la gestion de citas de una barberia (Java + Swing)
+ Actualizada: 8 de noviembre de 2026
+==========================================================================
+
+CONTENIDO DE ESTA GUIA
+  1. Que archivos hay y para que sirve cada uno
+  2. Como ver los diagramas de clases (HTML)
+  3. Como compilar y ejecutar la aplicacion
+  4. Como configurar el envio de correos (SMTP)
+  5. Como usar cada pestana de la aplicacion
+  6. Donde se guardan los datos y como respaldarlos
+  7. Como generar la documentacion del codigo (Javadoc)
+  8. Problemas comunes y como resolverlos
+
+
+--------------------------------------------------------------------------
+1. QUE ARCHIVOS HAY Y PARA QUE SIRVE CADA UNO
+--------------------------------------------------------------------------
+
+  src/logica/            Modelo: Cliente, Cita, TipoServicio, HorarioAtencion.
+  src/control/           Logica de negocio y persistencia: Barberia.
+  src/control/Correo.java Cliente SMTP para enviar los correos reales.
+  src/interfaz/Interfaz.java  Ventana Swing con las 6 pestanas.
+  src/module-info.java   Modulo "jadebarbershop" (requiere java.desktop).
+
+  UML_Barberia_v3.html   Diagrama de clases anterior (se conserva intacto).
+  UML_Barberia_v4.html   Diagrama de clases NUEVO y actualizado: incluye Correo,
+                         la capa interfaz, el autoguardado y el solapamiento.
+  COMO_USAR.txt          Este archivo.
+
+  README.md              Presentacion del proyecto en GitHub.
+  smtp.properties.ejemplo Plantilla para configurar el correo.
+  images/logo.png        Logo usado en el README.
+
+  barberia.dat           Datos guardados (se crea solo al usar la aplicacion).
+  state/barberia.dat     Igual que el anterior, si existe la carpeta "state".
+
+
+--------------------------------------------------------------------------
+2. COMO VER LOS DIAGRAMAS DE CLASES (HTML)
+--------------------------------------------------------------------------
+
+  Los dos diagramas son archivos HTML independientes; NO se sobrescriben
+  entre si. Se abren con doble clic o arrastrandolos al navegador:
+
+    - UML_Barberia_v3.html  -> version anterior (solo logica y control).
+    - UML_Barberia_v4.html  -> version actual (logica + control + interfaz).
+
+  Pasos:
+    1) Abrir la carpeta del proyecto en el explorador de archivos.
+    2) Hacer doble clic en UML_Barberia_v4.html.
+    3) El navegador lo muestra; no hace falta internet ni servidor.
+       (Solo las tipografias se piden a Google Fonts; si no hay internet,
+        el navegador usa una fuente parecida y el diagrama se ve igual.)
+
+  Consejos de lectura:
+    - Cada recuadro es una clase; el paquete esta indicado con un borde
+      punteado y una etiqueta (logica, control, interfaz).
+    - "+" significa publico, "-" privado y el texto subrayado es estatico.
+    - Linea con rombo lleno  = composicion (Barberia "tiene" esas listas).
+    - Linea con flecha abierta = asociacion dirigida (Cita usa Cliente y
+      TipoServicio).
+    - Linea punteada con flecha = dependencia (Interfaz usa Barberia;
+      Barberia usa Correo; Correo habla con el servidor SMTP).
+    - Al final del HTML hay notas de diseno que explican la persistencia,
+      el autoguardado, el solapamiento de citas y el correo.
+
+  Si el diagrama se ve muy grande o pequeno:
+    - Usar Ctrl + "+" / Ctrl + "-" para acercar o alejar.
+    - La zona del diagrama tiene barra de desplazamiento propia.
+    - Con el tema oscuro del sistema, el diagrama cambia de colores solo.
+
+
+--------------------------------------------------------------------------
+3. COMO COMPILAR Y EJECUTAR LA APLICACION
+--------------------------------------------------------------------------
+
+  Requisitos:
+    - JDK 17 o superior (probado con JDK 21). Verificar con:  java -version
+    - No hace falta Maven ni Gradle ni librerias externas.
+
+  Desde la linea de comandos, en la carpeta del proyecto:
+
+    javac -d bin $(find src -name "*.java")
+    java -cp bin interfaz.Interfaz
+
+  En Windows con CMD o PowerShell, si "find" no funciona:
+
+    dir /s /b src\*.java > fuentes.txt
+    javac -d bin @fuentes.txt
+    java -cp bin interfaz.Interfaz
+
+  Desde Eclipse:
+    1) File > Import > General > Existing Projects into Workspace.
+    2) Elegir la carpeta del repositorio y Finish.
+    3) Abrir src/interfaz/Interfaz.java y Run As > Java Application.
+
+  IMPORTANTE: si al ejecutar sale "Main method not found", significa que
+  la carpeta bin/ tiene clases viejas. Volver a compilar con el comando de
+  arriba (bin/ esta en .gitignore, no se versiona).
+
+
+--------------------------------------------------------------------------
+4. COMO CONFIGURAR EL ENVIO DE CORREOS (SMTP)
+--------------------------------------------------------------------------
+
+  Los botones "Enviar Confirmacion" y "Enviar Recordatorio" mandan correos
+  reales. Sin configuracion, la aplicacion avisa que falta el servidor SMTP.
+
+  Opcion A: archivo smtp.properties (recomendada)
+    1) Copiar smtp.properties.ejemplo y renombrar la copia a smtp.properties
+       (en la misma carpeta desde donde se ejecuta la aplicacion).
+    2) Completar los datos:
+
+         smtp.host=smtp.gmail.com
+         smtp.puerto=587
+         smtp.starttls=true
+         smtp.ssl=false
+         smtp.usuario=tucuenta@gmail.com
+         smtp.clave=xxxxxxxxxxxxxxxx
+         smtp.remitente=tucuenta@gmail.com
+         smtp.nombre=Jade Barbershop
+
+  Opcion B: variables de entorno
+    SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_NOMBRE,
+    SMTP_SSL, SMTP_STARTTLS. Tienen prioridad sobre el archivo.
+
+  Notas importantes:
+    - Gmail y Outlook NO aceptan la contrasena normal: hay que crear una
+      "contrasena de aplicacion" de 16 caracteres y usarla en smtp.clave.
+    - Puerto 587 con smtp.starttls=true (lo mas comun).
+    - Puerto 465 con smtp.ssl=true y smtp.starttls=false.
+    - smtp.properties esta en .gitignore: la contrasena no se sube a GitHub.
+    - La cita solo queda "Confirmada" si el correo se envio sin errores.
+    - El recordatorio no cambia el estado de la cita.
+
+
+--------------------------------------------------------------------------
+5. COMO USAR CADA PESTANA DE LA APLICACION
+--------------------------------------------------------------------------
+
+  PESTANA "CLIENTES"
+    - Crear: escribir Nombre Completo, Telefono (exactamente 8 digitos) y
+      Email (unico, es la llave del cliente) y pulsar Crear.
+    - Modificar: seleccionar una fila de la tabla, corregir los campos y
+      pulsar Modificar. Si se cambia el email, se valida que no exista.
+    - Borrar: seleccionar la fila y confirmar. No se puede borrar un cliente
+      con citas de hoy en adelante ni que este en la lista de espera.
+    - Buscar: escribir el email y pulsar Buscar; se selecciona la fila.
+    - Listar / Limpiar: refrescar la tabla o vaciar el formulario.
+
+  PESTANA "TIPOS DE SERVICIO"
+    - Crear un servicio con nombre, descripcion, precio en colones y
+      duracion en minutos (ambos mayores que 0).
+    - Modificar y Borrar igual que en clientes. Un servicio usado en alguna
+      cita no se puede borrar.
+    - La duracion es importante: se usa para detectar citas que se solapan.
+
+  PESTANA "CITAS"
+    - Crear Cita: Fecha en formato AAAA-MM-DD (ej. 2026-11-10), Hora como
+      numero entero de 0 a 23, Email del Cliente e ID Tipo de Servicio.
+    - El sistema rechaza fechas pasadas, horas fuera del horario de atencion
+      y citas que se crucen con otra segun la duracion del servicio.
+    - Modificar Cita: seleccionar la cita, cambiar los datos y confirmar.
+    - Borrar Cita: cancela la cita seleccionada.
+    - Buscar Cita: pide el ID y muestra los datos completos.
+    - Confirmar Cita: marca la cita como confirmada sin enviar correo.
+    - Enviar Confirmacion / Enviar Recordatorio: envian el correo real. El
+      envio tarda unos segundos y se hace en segundo plano (la ventana sigue
+      respondiendo; el cursor cambia a reloj de arena).
+
+  PESTANA "CALENDARIO"
+    - Escribir una fecha AAAA-MM-DD y pulsar:
+        "Citas del Dia"     -> solo ese dia.
+        "Citas de la Semana"-> 7 dias desde esa fecha.
+        "Citas del Mes"     -> un mes desde esa fecha.
+    - "Hoy" vuelve a la fecha actual y muestra sus citas.
+
+  PESTANA "LISTA DE ESPERA"
+    - Agregar a Espera: escribir el email de un cliente ya registrado.
+      No se permiten duplicados y la lista se ordena por nombre.
+    - Eliminar de Espera: seleccionar la fila (o escribir el email) y pulsar.
+    - Actualizar: refresca la tabla.
+
+  PESTANA "HORARIO"
+    - Marcar "Abierto" en los dias que se atiende y ajustar hora de inicio
+      y de fin con los controles.
+    - Guardar Horario aplica y guarda los cambios; Recargar vuelve a leer
+      lo guardado.
+    - La hora de cierre es exclusiva: si cierra a las 18:00, no se puede
+      reservar a las 18:00.
+
+  GUARDADO:
+    - Cada cambio se guarda automaticamente en disco.
+    - Al cerrar la ventana se hace un ultimo guardado; si falla, aparece un
+      mensaje de error.
+    - Si un guardado automatico falla, el mensaje de exito muestra una
+      advertencia con el motivo (por ejemplo, falta de permisos).
+
+
+--------------------------------------------------------------------------
+6. DONDE SE GUARDAN LOS DATOS Y COMO RESPALDARLOS
+--------------------------------------------------------------------------
+
+  - Archivo principal: barberia.dat (en la carpeta de ejecucion).
+  - Si existe la carpeta "state", se usa state/barberia.dat.
+  - Formato: serializacion binaria de Java (no editar a mano).
+  - Respaldo: cerrar la aplicacion y copiar barberia.dat (o la carpeta
+    state/) a otro lugar. Para restaurar, devolver el archivo a su sitio.
+  - Si se borra el archivo, la aplicacion arranca vacia sin dar error.
+  - El archivo esta en .gitignore: no se sube al repositorio.
+
+
+--------------------------------------------------------------------------
+7. COMO GENERAR LA DOCUMENTACION DEL CODIGO (JAVADOC)
+--------------------------------------------------------------------------
+
+  Desde la carpeta del proyecto:
+
+    javadoc -d docs -encoding UTF-8 -sourcepath src -subpackages logica:control:interfaz
+
+  Luego abrir docs/index.html en el navegador.
+  La carpeta docs/ esta en .gitignore porque es un artefacto generado.
+
+
+--------------------------------------------------------------------------
+8. PROBLEMAS COMUNES Y COMO RESOLVERLOS
+--------------------------------------------------------------------------
+
+  "Main method not found in class interfaz.Interfaz"
+    -> bin/ tiene clases viejas o vacias. Recompilar todo (seccion 3).
+
+  "No hay servidor SMTP configurado..."
+    -> Falta smtp.properties o la variable SMTP_HOST (seccion 4).
+
+  "El servidor SMTP rechazo la autenticacion (535)..."
+    -> Usar una contrasena de aplicacion, no la contrasena normal.
+       Revisar usuario y que el proveedor permita SMTP.
+
+  "La barberia esta cerrada o fuera de horario..."
+    -> Revisar la pestana Horario; el domingo viene cerrado por defecto.
+
+  "La cita se cruza con otra cita..."
+    -> Elegir otra hora. Recordar que se compara el rango completo segun
+       la duracion del servicio, no solo la hora de inicio.
+
+  "No se puede borrar el cliente porque tiene citas programadas..."
+    -> Borrar o mover primero esas citas, o retirarlo de la lista de espera.
+
+  La ventana se ve cortada en pantallas pequenas
+    -> La ventana mide 980x680; se puede maximizar o usar un monitor mayor.
+
+  Acentos o simbolos extranos en la consola de Windows
+    -> Es solo la codificacion de la consola; los datos se guardan en UTF-8.
+       Para verlos bien:  chcp 65001
+
+==========================================================================
+ FIN DE LA GUIA
+==========================================================================

@@ -1,0 +1,26 @@
+# Plantilla de configuración SMTP para Jade Barbershop.
+#
+# Copie este archivo como "smtp.properties" en la misma carpeta desde donde ejecuta la
+# aplicación (la raíz del proyecto, junto a src/) y complete los valores.
+# También puede usar variables de entorno con los mismos datos:
+#   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_NOMBRE, SMTP_SSL, SMTP_STARTTLS
+# Las variables de entorno tienen prioridad sobre este archivo.
+#
+# Ejemplo con Gmail:
+#   smtp.host=smtp.gmail.com
+#   smtp.puerto=587
+#   smtp.starttls=true
+#   smtp.usuario=micuenta@gmail.com
+#   smtp.clave=xxxxxxxxxxxxxxxx   (contraseña de aplicación, NO la normal)
+#
+# Gmail y Outlook exigen una "contraseña de aplicación" de 16 caracteres.
+# El archivo smtp.properties está en .gitignore para no subir la contraseña al repositorio.
+
+smtp.host=smtp.ejemplo.com
+smtp.puerto=587
+smtp.starttls=true
+smtp.ssl=false
+smtp.usuario=usuario@ejemplo.com
+smtp.clave=cambie-esta-clave
+smtp.remitente=usuario@ejemplo.com
+smtp.nombre=Jade Barbershop

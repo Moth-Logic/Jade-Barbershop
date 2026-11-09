@@ -3,5 +3,7 @@
 *.class
 barberia.dat
 state/
+smtp.properties
+/docs/
 .settings/
 .classpath

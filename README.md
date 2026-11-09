@@ -26,7 +26,7 @@
 - **Gestión de citas:** creación, reprogramación y cancelación, con calendario de citas.
 - **Tipos de servicio:** catálogo de servicios ofrecidos por la barbería.
 - **Lista de espera:** administración de clientes en espera de un espacio disponible.
-- **Notificaciones:** envío de correos de confirmación de citas.
+- **Notificaciones:** envío real de correos de confirmación y recordatorio a través de un servidor SMTP (ver [Configurar el correo](#configurar-el-correo-smtp)).
 - **Horario de atención:** configuración de los días y horas en que se atiende.
 - **Persistencia:** almacenamiento y recuperación de los datos en archivos.
 
@@ -44,7 +44,7 @@
 
 - **JDK 17** o superior (el proyecto usa `module-info.java`, por lo que requiere Java 9+).
 - **Eclipse IDE for Java Developers** (recomendado, el proyecto incluye `.project` y `.classpath`).
-- Credenciales SMTP si se desea probar el envío de notificaciones por correo.
+- Credenciales SMTP si se desea probar el envío real de notificaciones por correo (opcional).
 
 ## Como ejecutar
 
@@ -69,6 +69,31 @@ Ejecutar la aplicación:
 java -cp bin interfaz.Interfaz
 ```
 
+### Configurar el correo (SMTP)
+
+Las confirmaciones y los recordatorios se envían realmente por correo. La aplicación lee la configuración de las variables de entorno o de un archivo `smtp.properties` en la carpeta desde donde se ejecuta (hay una plantilla en [`smtp.properties.ejemplo`](smtp.properties.ejemplo)):
+
+| Clave en `smtp.properties` | Variable de entorno | Ejemplo |
+| --- | --- | --- |
+| `smtp.host` | `SMTP_HOST` | `smtp.gmail.com` |
+| `smtp.puerto` | `SMTP_PORT` | `587` |
+| `smtp.usuario` | `SMTP_USER` | `micuenta@gmail.com` |
+| `smtp.clave` | `SMTP_PASS` | contraseña de aplicación |
+| `smtp.remitente` | `SMTP_FROM` | `micuenta@gmail.com` |
+| `smtp.ssl` | `SMTP_SSL` | `false` (usar `true` con el puerto 465) |
+| `smtp.starttls` | `SMTP_STARTTLS` | `true` (recomendado con el puerto 587) |
+
+Si no hay configuración, los botones de correo muestran un mensaje indicando qué falta y el resto de la aplicación sigue funcionando con normalidad. El archivo `smtp.properties` está en `.gitignore` para no subir la contraseña al repositorio.
+
+## Documentación del código
+
+Todas las clases y sus métodos públicos están documentados con **Javadoc en español** (modelo, control, persistencia, correo y vistas). Para generar la documentación HTML:
+
+```bash
+javadoc -d docs -encoding UTF-8 -sourcepath src -subpackages logica:control:interfaz
+```
+
+Después se abre `docs/index.html` en el navegador. La carpeta `docs/` está en `.gitignore` porque es un artefacto generado.
 
 ## Diagrama UML
 

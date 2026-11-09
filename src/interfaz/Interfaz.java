@@ -1,6 +1,7 @@
 package interfaz;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
@@ -29,55 +30,132 @@ import javax.swing.table.DefaultTableModel;
 import control.Barberia;
 import logica.HorarioAtencion;
 
+/**
+ * Ventana principal de Jade Barbershop (capa de vista, Swing).
+ *
+ * La ventana está dividida en seis pestañas: Clientes, Tipos de Servicio, Citas,
+ * Calendario, Lista de Espera y Horario. Cada pestaña tiene una tabla con los datos y un
+ * formulario con botones; todos los botones delegan la lógica en la clase Barberia y
+ * aquí solo se muestran los resultados o los mensajes de error.
+ *
+ * Detalle importante: el envío de correos se ejecuta en un hilo aparte, porque hablar
+ * con el servidor SMTP tarda segundos y congelaría la ventana si se hiciera en el hilo
+ * de la interfaz (EDT).
+ */
 public class Interfaz extends JFrame {
 
+	/** Versión de la clase; la ventana no se serializa, pero se mantiene por convención. */
 	private static final long serialVersionUID = 1L;
 
+	/** Acceso a toda la lógica de negocio y a la persistencia. */
 	private Barberia barberia;
+
+	/** Contenedor de las seis pestañas de la ventana. */
 	private JTabbedPane tabbedPane;
 
-	// Componentes: Clientes
+	// ------------------------- Componentes: Clientes -------------------------
+
+	/** Tabla con los clientes registrados. */
 	private JTable tablaClientes;
+
+	/** Modelo de datos de {@link #tablaClientes}. */
 	private DefaultTableModel modeloClientes;
+
+	/** Campo del nombre completo. */
 	private JTextField txtNombreCliente;
+
+	/** Campo del teléfono de 8 dígitos. */
 	private JTextField txtTelCliente;
+
+	/** Campo del correo, que identifica al cliente. */
 	private JTextField txtEmailCliente;
+
+	/** Correo del cliente seleccionado en la tabla, o {@code null} si no hay ninguno. */
 	private String emailClienteSeleccionado;
 
-	// Componentes: Tipos de Servicio
+	// --------------------- Componentes: Tipos de Servicio --------------------
+
+	/** Tabla con el catálogo de servicios. */
 	private JTable tablaServicios;
+
+	/** Modelo de datos de {@link #tablaServicios}. */
 	private DefaultTableModel modeloServicios;
+
+	/** Campo del nombre del servicio. */
 	private JTextField txtNombreServicio;
+
+	/** Campo de la descripción del servicio. */
 	private JTextField txtDescServicio;
+
+	/** Campo del precio en colones. */
 	private JTextField txtPrecioServicio;
+
+	/** Campo de la duración en minutos. */
 	private JTextField txtDuracionServicio;
+
+	/** ID del servicio seleccionado en la tabla, o {@code null} si no hay ninguno. */
 	private String idServicioSeleccionado;
 
-	// Componentes: Citas
+	// --------------------------- Componentes: Citas --------------------------
+
+	/** Tabla con todas las citas. */
 	private JTable tablaCitas;
+
+	/** Modelo de datos de {@link #tablaCitas}. */
 	private DefaultTableModel modeloCitas;
+
+	/** Campo de la fecha de la cita (YYYY-MM-DD). */
 	private JTextField txtFechaCita;
+
+	/** Campo de la hora de la cita (0 a 23). */
 	private JTextField txtHoraCita;
+
+	/** Campo del correo del cliente de la cita. */
 	private JTextField txtEmailClienteCita;
+
+	/** Campo del ID del servicio de la cita. */
 	private JTextField txtIdServicioCita;
+
+	/** ID de la cita seleccionada en la tabla, o {@code null} si no hay ninguna. */
 	private String idCitaSeleccionada;
 
-	// Componentes: Calendario
+	// ------------------------ Componentes: Calendario ------------------------
+
+	/** Tabla de consultas del calendario (día, semana o mes). */
 	private JTable tablaCalendario;
+
+	/** Modelo de datos de {@link #tablaCalendario}. */
 	private DefaultTableModel modeloCalendario;
+
+	/** Fecha usada para las consultas del calendario. */
 	private JTextField txtFechaCalendario;
 
-	// Componentes: Lista de Espera
+	// ----------------------- Componentes: Lista de Espera --------------------
+
+	/** Tabla con los clientes en espera. */
 	private JTable tablaEspera;
+
+	/** Modelo de datos de {@link #tablaEspera}. */
 	private DefaultTableModel modeloEspera;
+
+	/** Campo del correo del cliente a agregar o retirar de la espera. */
 	private JTextField txtEmailEspera;
+
+	/** Correo del cliente seleccionado en la lista de espera. */
 	private String emailEsperaSeleccionado;
 
-	// Componentes: Horario de Atención
+	// -------------------- Componentes: Horario de Atención ------------------
+
+	/** Casillas que indican si la barbería abre cada día (0 = lunes ... 6 = domingo). */
 	private JCheckBox[] chkAbierto = new JCheckBox[7];
+
+	/** Hora de apertura de cada día. */
 	private JSpinner[] spnInicio = new JSpinner[7];
+
+	/** Hora de cierre de cada día. */
 	private JSpinner[] spnFin = new JSpinner[7];
 
+	/** Arma la ventana y carga los datos guardados en disco (si existen). */
 	public Interfaz() {
 		barberia = new Barberia("Jade Barbershop");
 		try {
@@ -89,6 +167,10 @@ public class Interfaz extends JFrame {
 		cargarDatosIniciales();
 	}
 
+	/**
+	 * Crea la ventana, las seis pestañas y el guardado al cerrar.
+	 * Se llama una sola vez desde el constructor.
+	 */
 	private void initComponents() {
 		setTitle("Jade Barbershop - Sistema de Gestión");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -108,6 +190,8 @@ public class Interfaz extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
+				// Guardado explícito al cerrar, además del autoguardado que hace Barberia
+				// después de cada cambio.
 				try {
 					barberia.guardar();
 				} catch (Exception ex) {
@@ -119,6 +203,7 @@ public class Interfaz extends JFrame {
 		});
 	}
 
+	/** Rellena todas las tablas y el horario con lo que se cargó del disco. */
 	private void cargarDatosIniciales() {
 		actualizarTablaClientes();
 		actualizarTablaServicios();
@@ -131,6 +216,7 @@ public class Interfaz extends JFrame {
 	// =========================================================================
 	// 1. PANEL CLIENTES
 	// =========================================================================
+	/** Pestaña 1: alta, modificación, borrado y búsqueda de clientes por correo. */
 	private JPanel crearPanelClientes() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -144,6 +230,7 @@ public class Interfaz extends JFrame {
 		};
 		tablaClientes = new JTable(modeloClientes);
 		tablaClientes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		// Al seleccionar una fila se copian sus datos al formulario para poder editarlos.
 		tablaClientes.getSelectionModel().addListSelectionListener(e -> {
 			if (e.getValueIsAdjusting()) return;
 			int row = tablaClientes.getSelectedRow();
@@ -178,7 +265,7 @@ public class Interfaz extends JFrame {
 					txtEmailCliente.getText());
 				actualizarTablaClientes();
 				limpiarCamposCliente();
-				JOptionPane.showMessageDialog(this, "Cliente creado exitosamente");
+				mostrarExito("Cliente creado exitosamente");
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -199,7 +286,7 @@ public class Interfaz extends JFrame {
 					txtEmailCliente.getText());
 				actualizarTablaClientes();
 				limpiarCamposCliente();
-				JOptionPane.showMessageDialog(this, "Cliente modificado exitosamente");
+				mostrarExito("Cliente modificado exitosamente");
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -260,6 +347,7 @@ public class Interfaz extends JFrame {
 		return panel;
 	}
 
+	/** Selecciona en la tabla la fila del cliente con ese correo (si está visible). */
 	private void seleccionarFilaCliente(String email) {
 		for (int i = 0; i < modeloClientes.getRowCount(); i++) {
 			if (email.equalsIgnoreCase((String) modeloClientes.getValueAt(i, 2))) {
@@ -269,6 +357,7 @@ public class Interfaz extends JFrame {
 		}
 	}
 
+	/** Vuelve a llenar la tabla de clientes desde la capa de control. */
 	private void actualizarTablaClientes() {
 		modeloClientes.setRowCount(0);
 		try {
@@ -281,6 +370,7 @@ public class Interfaz extends JFrame {
 		}
 	}
 
+	/** Vacía el formulario y olvida el cliente seleccionado. */
 	private void limpiarCamposCliente() {
 		txtNombreCliente.setText("");
 		txtTelCliente.setText("");
@@ -292,6 +382,7 @@ public class Interfaz extends JFrame {
 	// =========================================================================
 	// 2. PANEL TIPOS DE SERVICIO
 	// =========================================================================
+	/** Pestaña 2: catálogo de servicios (precio y duración en minutos). */
 	private JPanel crearPanelServicios() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -344,7 +435,7 @@ public class Interfaz extends JFrame {
 					Integer.parseInt(txtDuracionServicio.getText().trim()));
 				actualizarTablaServicios();
 				limpiarCamposServicio();
-				JOptionPane.showMessageDialog(this, "Tipo de servicio creado exitosamente");
+				mostrarExito("Tipo de servicio creado exitosamente");
 			} catch (NumberFormatException ex) {
 				JOptionPane.showMessageDialog(this, "Precio o duración inválidos.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
 			} catch (Exception ex) {
@@ -368,7 +459,7 @@ public class Interfaz extends JFrame {
 					Integer.parseInt(txtDuracionServicio.getText().trim()));
 				actualizarTablaServicios();
 				limpiarCamposServicio();
-				JOptionPane.showMessageDialog(this, "Tipo de servicio modificado exitosamente");
+				mostrarExito("Tipo de servicio modificado exitosamente");
 			} catch (NumberFormatException ex) {
 				JOptionPane.showMessageDialog(this, "Precio o duración inválidos.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
 			} catch (Exception ex) {
@@ -432,6 +523,7 @@ public class Interfaz extends JFrame {
 		return panel;
 	}
 
+	/** Vuelve a llenar la tabla de servicios desde la capa de control. */
 	private void actualizarTablaServicios() {
 		modeloServicios.setRowCount(0);
 		try {
@@ -443,6 +535,7 @@ public class Interfaz extends JFrame {
 		}
 	}
 
+	/** Vacía el formulario de servicios y olvida el servicio seleccionado. */
 	private void limpiarCamposServicio() {
 		txtNombreServicio.setText("");
 		txtDescServicio.setText("");
@@ -455,6 +548,10 @@ public class Interfaz extends JFrame {
 	// =========================================================================
 	// 3. PANEL CITAS
 	// =========================================================================
+	/**
+	 * Pestaña 3: agenda de citas. La fecha se escribe como YYYY-MM-DD y la hora es un
+	 * entero de 0 a 23; el servicio se elige por su ID.
+	 */
 	private JPanel crearPanelCitas() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -468,6 +565,7 @@ public class Interfaz extends JFrame {
 		};
 		tablaCitas = new JTable(modeloCitas);
 		tablaCitas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		// Al elegir una cita se cargan fecha, hora, correo del cliente y ID del servicio.
 		tablaCitas.getSelectionModel().addListSelectionListener(e -> {
 			if (e.getValueIsAdjusting()) return;
 			int row = tablaCitas.getSelectedRow();
@@ -523,7 +621,7 @@ public class Interfaz extends JFrame {
 				actualizarTablaCitas();
 				actualizarTablaCalendarioHoy();
 				limpiarCamposCita();
-				JOptionPane.showMessageDialog(this, "Cita agendada exitosamente");
+				mostrarExito("Cita agendada exitosamente");
 			} catch (DateTimeParseException ex) {
 				JOptionPane.showMessageDialog(this, "Formato de fecha inválido. Utilice YYYY-MM-DD (ej: 2026-11-10)", "Error", JOptionPane.ERROR_MESSAGE);
 			} catch (NumberFormatException ex) {
@@ -547,7 +645,7 @@ public class Interfaz extends JFrame {
 				actualizarTablaCitas();
 				actualizarTablaCalendarioHoy();
 				limpiarCamposCita();
-				JOptionPane.showMessageDialog(this, "Cita modificada exitosamente");
+				mostrarExito("Cita modificada exitosamente");
 			} catch (DateTimeParseException ex) {
 				JOptionPane.showMessageDialog(this, "Formato de fecha inválido. Utilice YYYY-MM-DD", "Error", JOptionPane.ERROR_MESSAGE);
 			} catch (NumberFormatException ex) {
@@ -573,7 +671,7 @@ public class Interfaz extends JFrame {
 					actualizarTablaCitas();
 					actualizarTablaCalendarioHoy();
 					limpiarCamposCita();
-					JOptionPane.showMessageDialog(this, "Cita borrada exitosamente");
+					mostrarExito("Cita borrada exitosamente");
 				}
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -605,41 +703,32 @@ public class Interfaz extends JFrame {
 				barberia.confirmarCita(idCitaSeleccionada);
 				actualizarTablaCitas();
 				actualizarTablaCalendarioHoy();
-				JOptionPane.showMessageDialog(this, "Cita confirmada");
+				mostrarExito("Cita confirmada");
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		});
 		btnPanel.add(btnConfirmar);
 
+		// Los dos botones de correo solo piden la cita seleccionada; el envío real se hace
+		// en segundo plano (ver enviarNotificacion) para no bloquear la ventana.
 		JButton btnEnviarConfirmacion = new JButton("Enviar Confirmación");
 		btnEnviarConfirmacion.addActionListener(e -> {
-			try {
-				if (idCitaSeleccionada == null) {
-					JOptionPane.showMessageDialog(this, "Seleccione una cita de la tabla");
-					return;
-				}
-				String respuesta = barberia.enviarConfirmacion(idCitaSeleccionada);
-				actualizarTablaCitas();
-				JOptionPane.showMessageDialog(this, respuesta, "Notificación", JOptionPane.INFORMATION_MESSAGE);
-			} catch (Exception ex) {
-				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			if (idCitaSeleccionada == null) {
+				JOptionPane.showMessageDialog(this, "Seleccione una cita de la tabla");
+				return;
 			}
+			enviarNotificacion(idCitaSeleccionada, true);
 		});
 		btnPanel.add(btnEnviarConfirmacion);
 
 		JButton btnEnviarRecordatorio = new JButton("Enviar Recordatorio");
 		btnEnviarRecordatorio.addActionListener(e -> {
-			try {
-				if (idCitaSeleccionada == null) {
-					JOptionPane.showMessageDialog(this, "Seleccione una cita de la tabla");
-					return;
-				}
-				String respuesta = barberia.enviarRecordatorio(idCitaSeleccionada);
-				JOptionPane.showMessageDialog(this, respuesta, "Notificación", JOptionPane.INFORMATION_MESSAGE);
-			} catch (Exception ex) {
-				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			if (idCitaSeleccionada == null) {
+				JOptionPane.showMessageDialog(this, "Seleccione una cita de la tabla");
+				return;
 			}
+			enviarNotificacion(idCitaSeleccionada, false);
 		});
 		btnPanel.add(btnEnviarRecordatorio);
 
@@ -659,6 +748,7 @@ public class Interfaz extends JFrame {
 		return panel;
 	}
 
+	/** Vuelve a llenar la tabla de citas desde la capa de control. */
 	private void actualizarTablaCitas() {
 		modeloCitas.setRowCount(0);
 		try {
@@ -670,6 +760,7 @@ public class Interfaz extends JFrame {
 		}
 	}
 
+	/** Restablece el formulario de citas a sus valores por defecto. */
 	private void limpiarCamposCita() {
 		txtFechaCita.setText(LocalDate.now().toString());
 		txtHoraCita.setText("9");
@@ -682,6 +773,7 @@ public class Interfaz extends JFrame {
 	// =========================================================================
 	// 4. PANEL CALENDARIO
 	// =========================================================================
+	/** Pestaña 4: consultas de citas por día, por semana, por mes o las de hoy. */
 	private JPanel crearPanelCalendario() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -755,6 +847,11 @@ public class Interfaz extends JFrame {
 		return panel;
 	}
 
+	/**
+	 * Muestra las citas recibidas en la tabla del calendario y avisa si no hay ninguna.
+	 *
+	 * @param citas filas devueltas por las consultas de Barberia
+	 */
 	private void mostrarCitasEnCalendario(ArrayList<String[]> citas) {
 		modeloCalendario.setRowCount(0);
 		for (int i = 0; i < citas.size(); i++) {
@@ -765,6 +862,7 @@ public class Interfaz extends JFrame {
 		}
 	}
 
+	/** Refresca el calendario con las citas de la fecha actual. */
 	private void actualizarTablaCalendarioHoy() {
 		try {
 			ArrayList<String[]> citas = barberia.getCitasPorFecha(LocalDate.now());
@@ -779,6 +877,7 @@ public class Interfaz extends JFrame {
 	// =========================================================================
 	// 5. PANEL LISTA DE ESPERA
 	// =========================================================================
+	/** Pestaña 5: clientes que esperan un espacio disponible. */
 	private JPanel crearPanelEspera() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -817,7 +916,7 @@ public class Interfaz extends JFrame {
 				actualizarTablaEspera();
 				txtEmailEspera.setText("");
 				emailEsperaSeleccionado = null;
-				JOptionPane.showMessageDialog(this, "Cliente agregado a la lista de espera");
+				mostrarExito("Cliente agregado a la lista de espera");
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -839,7 +938,7 @@ public class Interfaz extends JFrame {
 				actualizarTablaEspera();
 				txtEmailEspera.setText("");
 				emailEsperaSeleccionado = null;
-				JOptionPane.showMessageDialog(this, "Cliente retirado de la lista de espera");
+				mostrarExito("Cliente retirado de la lista de espera");
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -866,6 +965,7 @@ public class Interfaz extends JFrame {
 		return panel;
 	}
 
+	/** Vuelve a llenar la tabla de la lista de espera. */
 	private void actualizarTablaEspera() {
 		modeloEspera.setRowCount(0);
 		try {
@@ -880,6 +980,7 @@ public class Interfaz extends JFrame {
 	// =========================================================================
 	// 6. PANEL HORARIO DE ATENCIÓN
 	// =========================================================================
+	/** Pestaña 6: días abiertos y horas de apertura/cierre de cada día. */
 	private JPanel crearPanelHorario() {
 		JPanel panel = new JPanel(new BorderLayout(10, 10));
 		panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -926,7 +1027,7 @@ public class Interfaz extends JFrame {
 					int fin = (Integer) spnFin[i].getValue();
 					barberia.setHorario(i, abierto, inicio, fin);
 				}
-				JOptionPane.showMessageDialog(this, "Horario de atención actualizado exitosamente");
+				mostrarExito("Horario de atención actualizado exitosamente");
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this, ex.getMessage(), "Error al Configurar Horario", JOptionPane.ERROR_MESSAGE);
 			}
@@ -942,6 +1043,10 @@ public class Interfaz extends JFrame {
 		return panel;
 	}
 
+	/**
+	 * Copia a los controles de la pestaña Horario los valores guardados en Barberia
+	 * y deshabilita las horas de los días cerrados.
+	 */
 	private void cargarValoresHorario() {
 		try {
 			HorarioAtencion h = barberia.getHorario();
@@ -962,6 +1067,60 @@ public class Interfaz extends JFrame {
 		}
 	}
 
+	/**
+	 * Envía el correo de confirmación o de recordatorio en un hilo aparte.
+	 *
+	 * Mientras el servidor SMTP responde, la ventana sigue usable (el cursor cambia a
+	 * reloj de arena). Al terminar, la tabla y los diálogos se actualizan en el hilo de
+	 * la interfaz con SwingUtilities.invokeLater.
+	 */
+	private void enviarNotificacion(String idCita, boolean esConfirmacion) {
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+		Thread hilo = new Thread(() -> {
+			try {
+				String respuesta = esConfirmacion
+						? barberia.enviarConfirmacion(idCita)
+						: barberia.enviarRecordatorio(idCita);
+
+				SwingUtilities.invokeLater(() -> {
+					setCursor(Cursor.getDefaultCursor());
+					actualizarTablaCitas();
+					JOptionPane.showMessageDialog(this, respuesta, "Notificación", JOptionPane.INFORMATION_MESSAGE);
+				});
+			} catch (Exception ex) {
+				SwingUtilities.invokeLater(() -> {
+					setCursor(Cursor.getDefaultCursor());
+					JOptionPane.showMessageDialog(this, ex.getMessage(),
+							"Error al enviar el correo", JOptionPane.ERROR_MESSAGE);
+				});
+			}
+		}, "envio-correo");
+		hilo.start();
+	}
+
+	/**
+	 * Muestra un mensaje de éxito y, si el guardado automático falló, añade la advertencia.
+	 * El cambio igual quedó aplicado en memoria, así que no se obliga a repetir la acción.
+	 */
+	private void mostrarExito(String mensaje) {
+		String errorGuardado = barberia.getErrorGuardado();
+		if (errorGuardado == null) {
+			JOptionPane.showMessageDialog(this, mensaje);
+			return;
+		}
+		barberia.limpiarErrorGuardado();
+		JOptionPane.showMessageDialog(this,
+				mensaje + "\n\nAdvertencia: el cambio se aplicó, pero no se pudo guardar en disco:\n" + errorGuardado,
+				"Guardado automático", JOptionPane.WARNING_MESSAGE);
+	}
+
+	/**
+	 * Punto de entrada de la aplicación: crea y muestra la ventana en el hilo de la
+	 * interfaz (EDT), que es lo que exige Swing.
+	 *
+	 * @param args argumentos de línea de comandos (no se usan)
+	 */
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
 			new Interfaz().setVisible(true);

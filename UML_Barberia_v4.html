@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagrama de Clases v4 &mdash; Jade Barbershop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #f8f7f5;
+  --fg: #1a1a1a;
+  --fg-muted: #6b6560;
+  --class-bg: #ffffff;
+  --class-border: #c4bfb8;
+  --class-header-bg: #e8e4de;
+  --pkg-bg: rgba(200,195,185,0.18);
+  --pkg-border: #b0a99f;
+  --accent: #3a6b4e;
+  --accent-light: #e0eddf;
+  --line: #5a5550;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1b19;
+    --fg: #e4e2de;
+    --fg-muted: #9a958e;
+    --class-bg: #26251f;
+    --class-border: #4a463e;
+    --class-header-bg: #33312a;
+    --pkg-bg: rgba(60,57,50,0.5);
+    --pkg-border: #5a5650;
+    --accent: #6aad7e;
+    --accent-light: #2a3a2e;
+    --line: #8a857e;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
+  padding: 20px 16px 40px;
+  margin: 0;
+}
+
+h1 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 6px;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+  margin: 0 0 18px;
+}
+
+.diagram-wrap {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--class-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(var(--pkg-bg), var(--pkg-bg)) padding-box;
+}
+
+.diagram {
+  position: relative;
+  min-width: 1400px;
+  min-height: 1380px;
+  margin: 0 auto;
+}
+
+svg.lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+svg.lines line, svg.lines path {
+  stroke: var(--line);
+  fill: none;
+}
+svg.lines text {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  fill: var(--fg-muted);
+}
+svg.lines .diamond { fill: var(--line); stroke: var(--line); }
+svg.lines .arrow-open {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+
+.pkg {
+  position: absolute;
+  border: 1.5px dashed var(--pkg-border);
+  border-radius: 6px;
+  background: var(--pkg-bg);
+}
+.pkg-label {
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  background: var(--bg);
+  padding: 0 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.uml-class {
+  position: absolute;
+  border: 1.5px solid var(--class-border);
+  border-radius: 4px;
+  background: var(--class-bg);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.uml-class .header {
+  background: var(--class-header-bg);
+  padding: 6px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--class-border);
+  border-radius: 3px 3px 0 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+.uml-class .stereotype {
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: var(--fg-muted);
+  display: block;
+  font-style: italic;
+}
+.uml-class .attrs, .uml-class .methods {
+  padding: 5px 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.67rem;
+  line-height: 1.55;
+  border-bottom: 1px solid var(--class-border);
+  white-space: nowrap;
+}
+.uml-class .methods { border-bottom: none; }
+.vis-public::before { content: "+ "; color: var(--accent); }
+.vis-private::before { content: "- "; color: #b55; }
+.vis-static { text-decoration: underline; }
+.type { color: var(--fg-muted); }
+
+.notes {
+  max-width: 1360px;
+  margin: 26px auto 0;
+}
+.notes h2 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.95rem;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+.note-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 12px;
+}
+.note {
+  background: var(--class-bg);
+  border: 1px solid var(--class-border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.note h3 {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--accent);
+}
+.note p { margin: 0 0 6px; }
+.note p:last-child { margin-bottom: 0; }
+.note code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.95em;
+  background: var(--pkg-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { width: 46px; height: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Jade Barbershop</h1>
+<p class="subtitle">
+  Diagrama de Clases v4 &mdash; modelo, control (con correo SMTP) e interfaz &mdash; 8 de noviembre de 2026
+</p>
+
+<div class="diagram-wrap">
+<div class="diagram" id="diagram">
+
+  <!-- ===================== PAQUETES ===================== -->
+  <div class="pkg" style="left:20px; top:10px; width:1360px; height:400px;">
+    <span class="pkg-label">logica</span>
+  </div>
+
+  <div class="pkg" style="left:20px; top:430px; width:1360px; height:420px;">
+    <span class="pkg-label">control</span>
+  </div>
+
+  <div class="pkg" style="left:20px; top:870px; width:1360px; height:465px;">
+    <span class="pkg-label">interfaz</span>
+  </div>
+
+  <!-- ===================== CLASES DEL MODELO ===================== -->
+
+  <!-- Cliente -->
+  <div class="uml-class" id="cliente" style="left:40px; top:40px; width:320px;">
+    <div class="header">Cliente
+      <span class="stereotype">&laquo;Serializable, Comparable&lt;Cliente&gt;&raquo;</span>
+    </div>
+    <div class="attrs">
+      <div><span class="vis-private"></span><span class="vis-static">serialVersionUID: <span class="type">long</span></span></div>
+      <div><span class="vis-private"></span>nombreCompleto: <span class="type">String</span></div>
+      <div><span class="vis-private"></span>telefono: <span class="type">String</span></div>
+      <div><span class="vis-private"></span>email: <span class="type">String</span></div>
+    </div>
+    <div class="methods">
+      <div><span class="vis-public"></span>Cliente()</div>
+      <div><span class="vis-public"></span>Cliente(nombreCompleto, telefono, email)</div>
+      <div><span class="vis-public"></span>getId() / getEmail(): <span class="type">String</span></div>
+      <div><span class="vis-public"></span>getNombreCompleto() / setNombreCompleto(String)</div>
+      <div><span class="vis-public"></span>getTelefono() / setTelefono(String)</div>
+      <div><span class="vis-public"></span>setEmail(email: String): <span class="type">void</span></div>
+      <div><span class="vis-public"></span>equals(o: Object): <span class="type">boolean</span></div>
+      <div><span class="vis-public"></span>hashCode(): <span class="type">int</span></div>
+      <div><span class="vis-public"></span>compareTo(o: Cliente): <span class="type">int</span></div>
+      <div><span class="vis-public"></span>toString(): <span class="type">String</span></div>
+    </div>
+  </div>
+
+  <!-- Cita -->
+  <div class="uml-class" id="cita" style="left:400px; top:40px; width:340px;">
+    <div class="header">Cita
+      <span class="stereotype">&laquo;Serializable&raquo;</span>
+    </div>
+    <div class="attrs">
+      <div><span class="vis-private"></span><span class="vis-static">serialVersionUID: <span class="type">long</span></span></div>
+      <div><span class="vis-private"></span>id: <span class="type">String</span></div>
+      <div><span class="vis-private"></span>fecha: <span class="type">LocalDate</span></div>
+      <div><span class="vis-private"></span>hora: <span class="type">int</span></div>
+      <div><span class="vis-private"></span>confirmada: <span class="type">boolean</span></div>
+      <div><span class="vis-private"></span>cliente: <span class="type">Cliente</span></div>
+      <div><span class="vis-private"></span>tipoServicio: <span class="type">TipoServicio</span></div>
+    </div>
+    <div class="methods">
+      <div><span class="vis-public"></span>Cita()</div>
+      <div><span class="vis-public"></span>Cita(id, fecha, hora, cliente, tipoServicio)</div>
+      <div><span class="vis-public"></span>Cita(id, fecha, hora, cliente, tipoServicio, confirmada)</div>
+      <div><span class="vis-public"></span>getId() / setId(String)</div>
+      <div><span class="vis-public"></span>getFecha() / setFecha(LocalDate)</div>
+      <div><span class="vis-public"></span>getHora() / setHora(int)</div>
+      <div><span class="vis-public"></span>isConfirmada() / setConfirmada(boolean)</div>
+      <div><span class="vis-public"></span>getCliente() / setCliente(Cliente)</div>
+      <div><span class="vis-public"></span>getTipoServicio() / setTipoServicio(TipoServicio)</div>
+      <div><span class="vis-public"></span>confirmar(): <span class="type">void</span></div>
+      <div><span class="vis-public"></span>equals(o: Object) / hashCode()</div>
+      <div><span class="vis-public"></span>toString(): <span class="type">String</span></div>
+    </div>
+  </div>
+
+  <!-- TipoServicio -->
+  <div class="uml-class" id="tiposervicio" style="left:780px; top:40px; width:300px;">
+    <div class="header">TipoServicio
+      <span class="stereotype">&laquo;Serializable&raquo;</span>
+    </div>
+    <div class="attrs">
+      <div><span class="vis-private"></span><span class="vis-static">serialVersionUID: <span class="type">long</span></span></div>
+      <div><span class="vis-private"></span>id: <span class="type">String</span></div>
+      <div><span class="vis-private"></span>nombre: <span class="type">String</span></div>
+      <div><span class="vis-private"></span>descripcion: <span class="type">String</span></div>
+      <div><span class="vis-private"></span>precio: <span class="type">double</span></div>
+      <div><span class="vis-private"></span>duracionMinutos: <span class="type">int</span></div>
+    </div>
+    <div class="methods">
+      <div><span class="vis-public"></span>TipoServicio()</div>
+      <div><span class="vis-public"></span>TipoServicio(id, nombre, descripcion,</div>
+      <div>&nbsp;&nbsp;&nbsp;precio, duracionMinutos)</div>
+      <div><span class="vis-public"></span>getId() / setId(String)</div>
+      <div><span class="vis-public"></span>getNombre() / setNombre(String)</div>
+      <div><span class="vis-public"></span>getDescripcion() / setDescripcion(String)</div>
+      <div><span class="vis-public"></span>getPrecio() / setPrecio(double)</div>
+      <div><span class="vis-public"></span>getDuracionMinutos() / setDuracionMinutos(int)</div>
+      <div><span class="vis-public"></span>equals(o: Object) / hashCode()</div>
+      <div><span class="vis-public"></span>toString(): <span class="type">String</span></div>
+    </div>
+  </div>
+
+  <!-- HorarioAtencion -->
+  <div class="uml-class" id="horario" style="left:1110px; top:40px; width:270px;">
+    <div class="header">HorarioAtencion
+      <span class="stereotype">&laquo;Serializable&raquo;</span>
+    </div>
+    <div class="attrs">
+      <div><span class="vis-private"></span><span class="vis-static">serialVersionUID: <span class="type">long</span></span></div>
+      <div><span class="vis-public"></span><span class="vis-static">NOMBRES_DIAS: <span class="type">String[]</span></span></div>
+      <div><span class="vis-private"></span>abierto: <span class="type">boolean[]</span></div>
+      <div><span class="vis-private"></span>horaInicio: <span class="type">int[]</span></div>
+      <div><span class="vis-private"></span>horaFin: <span class="type">int[]</span></div>
+    </div>
+    <div class="methods">
+      <div><span class="vis-public"></span>HorarioAtencion()</div>
+      <div><span class="vis-private"></span>normalizarDia(dia: int): <span class="type">int</span></div>
+      <div><span class="vis-public"></span>setDia(dia, abierto, inicio, fin): <span class="type">void</span></div>
+      <div><span class="vis-public"></span>isDiaAbierto(dia: int): <span class="type">boolean</span></div>
+      <div><span class="vis-public"></span>getHoraInicio(dia: int): <span class="type">int</span></div>
+      <div><span class="vis-public"></span>getHoraFin(dia: int): <span class="type">int</span></div>
+      <div><span class="vis-public"></span>estaDisponible(dia: int, hora: int)</div>
+      <div><span class="vis-public"></span>estaDisponible(fecha: LocalDate, hora: int)</div>
+      <div><span class="vis-public"></span>getAbierto(): <span class="type">boolean[]</span></div>
+      <div><span class="vis-public"></span>getHoraInicio() / getHoraFin(): <span class="type">int[]</span></div>
+      <div><span class="vis-public"></span>toString(): <span class="type">String</span></div>
+    </div>
+  </div>
+
+  <!-- ===================== CONTROL: Barberia ===================== -->
+  <div class="uml-class" id="barberia" style="left:40px; top:470px; width:920px;">
+    <div class="header">Barberia
+      <span class="stereotype">&laquo;Serializable &mdash; lógica de negocio y persistencia&raquo;</span>
+    </div>
+    <div class="attrs" style="display:flex; gap:24px; flex-wrap:wrap;">
+      <div>
+        <div><span class="vis-private"></span><span class="vis-static">serialVersionUID: <span class="type">long</span></span></div>
+        <div><span class="vis-private"></span><span class="vis-static">ARCHIVO_DAT: <span class="type">String</span></span></div>
+        <div><span class="vis-private"></span><span class="vis-static">ARCHIVO_STATE: <span class="type">String</span></span></div>
+        <div><span class="vis-private"></span><span class="vis-static">FORMATO_FECHA: <span class="type">DateTimeFormatter</span></span></div>
+        <div><span class="vis-private"></span>nombre: <span class="type">String</span></div>
+      </div>
+      <div>
+        <div><span class="vis-private"></span>consecutivoCita: <span class="type">int</span></div>
+        <div><span class="vis-private"></span>consecutivoTipoServicio: <span class="type">int</span></div>
+        <div><span class="vis-private"></span>horario: <span class="type">HorarioAtencion</span></div>
+        <div><span class="vis-private"></span>errorGuardado: <span class="type">String</span></div>
+      </div>
+      <div>
+        <div><span class="vis-private"></span>clientes: <span class="type">List&lt;Cliente&gt;</span></div>
+        <div><span class="vis-private"></span>listaEspera: <span class="type">List&lt;Cliente&gt;</span></div>
+        <div><span class="vis-private"></span>citas: <span class="type">List&lt;Cita&gt;</span></div>
+        <div><span class="vis-private"></span>tiposServicio: <span class="type">List&lt;TipoServicio&gt;</span></div>
+      </div>
+    </div>
+    <div class="methods" style="display:flex; gap:24px; flex-wrap:wrap;">
+      <div>
+        <div><span class="vis-public"></span>Barberia(nombre: String)</div>
+        <div><span class="vis-public"></span>validarCliente(nombre, tel, email): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>crearCliente(nombreCompleto, tel, email)</div>
+        <div><span class="vis-public"></span>modificarCliente(email, nombreCompleto,</div>
+        <div>&nbsp;&nbsp;&nbsp;tel, emailNuevo): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>borrarCliente(email): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>consultarCliente(email): <span class="type">Cliente</span></div>
+        <div><span class="vis-public"></span>listarClientes(): <span class="type">ArrayList&lt;String[]&gt;</span></div>
+        <div><span class="vis-private"></span>validarCita(id, fecha, hora,</div>
+        <div>&nbsp;&nbsp;&nbsp;emailCliente, idTipoServicio): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>crearCita(fecha, hora,</div>
+        <div>&nbsp;&nbsp;&nbsp;emailCliente, idTipoServicio): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>modificarCita(id, fecha, hora,</div>
+        <div>&nbsp;&nbsp;&nbsp;emailCliente, idTipoServicio): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>borrarCita(id: String): <span class="type">void</span></div>
+      </div>
+      <div>
+        <div><span class="vis-public"></span>consultarCita(id): <span class="type">Cita</span></div>
+        <div><span class="vis-public"></span>confirmarCita(id): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>listarCitas(): <span class="type">ArrayList&lt;String[]&gt;</span></div>
+        <div><span class="vis-public"></span>ListarCitas(): <span class="type">ArrayList&lt;String[]&gt;</span></div>
+        <div><span class="vis-public"></span>getCitasPorFecha(fecha)</div>
+        <div><span class="vis-public"></span>getCitasSemana(fechaInicio)</div>
+        <div><span class="vis-public"></span>getCitasMes(fechaInicio)</div>
+        <div><span class="vis-private"></span>validarSolapamiento(fecha, hora,</div>
+        <div>&nbsp;&nbsp;&nbsp;servicio, idExcluido): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>validarTipoServicio(id, nombre,</div>
+        <div>&nbsp;&nbsp;&nbsp;descripcion, precio, duracion)</div>
+        <div><span class="vis-public"></span>crearTipoServicio(nombre, descripcion,</div>
+        <div>&nbsp;&nbsp;&nbsp;precio, duracionMinutos): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>modificarTipoServicio(id, nombre,</div>
+        <div>&nbsp;&nbsp;&nbsp;descripcion, precio, duracion): <span class="type">void</span></div>
+      </div>
+      <div>
+        <div><span class="vis-public"></span>borrarTipoServicio(id): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>consultarTipoServicio(id): <span class="type">TipoServicio</span></div>
+        <div><span class="vis-public"></span>listarTiposServicio(): <span class="type">ArrayList&lt;String[]&gt;</span></div>
+        <div><span class="vis-public"></span>agregarAListaEspera(emailCliente)</div>
+        <div><span class="vis-public"></span>eliminarDeListaEspera(emailCliente)</div>
+        <div><span class="vis-public"></span>mostrarListaEspera(): <span class="type">ArrayList&lt;String[]&gt;</span></div>
+        <div><span class="vis-public"></span>setHorario(dia, abierto, inicio, fin)</div>
+        <div><span class="vis-public"></span>getHorario(): <span class="type">HorarioAtencion</span></div>
+        <div><span class="vis-public"></span>enviarConfirmacion(idCita): <span class="type">String</span></div>
+        <div><span class="vis-public"></span>enviarRecordatorio(idCita): <span class="type">String</span></div>
+        <div><span class="vis-private"></span>autoguardar(): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>guardar(): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>cargar(): <span class="type">void</span></div>
+        <div><span class="vis-public"></span>getErrorGuardado(): <span class="type">String</span></div>
+        <div><span class="vis-public"></span>limpiarErrorGuardado(): <span class="type">void</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CONTROL: Correo ===================== -->
+  <div class="uml-class" id="correo" style="left:1000px; top:470px; width:360px;">
+    <div class="header">Correo
+      <span class="stereotype">&laquo;final &mdash; cliente SMTP sin dependencias&raquo;</span>
+    </div>
+    <div class="attrs">
+      <div><span class="vis-private"></span><span class="vis-static">ARCHIVO_CONFIG: <span class="type">String</span> = "smtp.properties"</span></div>
+      <div><span class="vis-private"></span><span class="vis-static">TIEMPO_ESPERA_MS: <span class="type">int</span></span></div>
+      <div><span class="vis-private"></span><span class="vis-static">FIN_DE_LINEA: <span class="type">String</span></span></div>
+    </div>
+    <div class="methods">
+      <div><span class="vis-public"></span><span class="vis-static">enviar(destinatario, asunto, cuerpo): <span class="type">void</span></span></div>
+      <div><span class="vis-private"></span><span class="vis-static">enviarPorRed(config, destinatario,</span></div>
+      <div>&nbsp;&nbsp;&nbsp;asunto, cuerpo): <span class="type">void</span></div>
+      <div><span class="vis-private"></span><span class="vis-static">abrirConexion(config): <span class="type">Socket</span></span></div>
+      <div><span class="vis-private"></span><span class="vis-static">comando(salida, entrada, orden)</span></div>
+      <div><span class="vis-private"></span><span class="vis-static">leer(entrada): <span class="type">Respuesta</span></span></div>
+      <div><span class="vis-private"></span><span class="vis-static">esperar(respuesta, etapa, codigos)</span></div>
+      <div><span class="vis-private"></span><span class="vis-static">construirMensaje(config, destinatario,</span></div>
+      <div>&nbsp;&nbsp;&nbsp;asunto, cuerpo): <span class="type">String</span></div>
+      <div><span class="vis-private"></span><span class="vis-static">codificarAsunto(asunto): <span class="type">String</span></span></div>
+      <div><span class="vis-private"></span><span class="vis-static">cargarConfiguracion(): <span class="type">Config</span></span></div>
+      <div><span class="vis-private"></span>clases internas: <span class="type">Config</span>, <span class="type">Respuesta</span></div>
+    </div>
+  </div>
+
+  <!-- Servidor SMTP externo -->
+  <div class="uml-class" style="left:1000px; top:745px; width:360px;">
+    <div class="header">Servidor SMTP
+      <span class="stereotype">&laquo;externo&raquo;</span>
+    </div>
+    <div class="attrs">
+      <div>smtp.gmail.com:587 (STARTTLS) &oacute; :465 (SSL)</div>
+      <div>autenticaci&oacute;n AUTH PLAIN / AUTH LOGIN</div>
+    </div>
+  </div>
+
+  <!-- ===================== INTERFAZ ===================== -->
+  <div class="uml-class" id="interfaz" style="left:40px; top:910px; width:1100px;">
+    <div class="header">Interfaz
+      <span class="stereotype">&laquo;JFrame &mdash; vista Swing (6 pesta&ntilde;as)&raquo;</span>
+    </div>
+    <div class="attrs" style="display:flex; gap:36px; flex-wrap:wrap;">
+      <div>
+        <div><span class="vis-private"></span>barberia: <span class="type">Barberia</span></div>
+        <div><span class="vis-private"></span>tabbedPane: <span class="type">JTabbedPane</span></div>
+        <div><span class="vis-private"></span>tablaClientes: JTable / modeloClientes: DefaultTableModel</div>
+        <div><span class="vis-private"></span>txtNombreCliente, txtTelCliente, txtEmailCliente</div>
+        <div><span class="vis-private"></span>emailClienteSeleccionado: <span class="type">String</span></div>
+        <div><span class="vis-private"></span>tablaServicios / modeloServicios / txtNombreServicio</div>
+        <div><span class="vis-private"></span>txtDescServicio, txtPrecioServicio, txtDuracionServicio</div>
+        <div><span class="vis-private"></span>idServicioSeleccionado: <span class="type">String</span></div>
+        <div><span class="vis-private"></span>tablaCitas / modeloCitas / txtFechaCita, txtHoraCita</div>
+        <div><span class="vis-private"></span>txtEmailClienteCita, txtIdServicioCita</div>
+        <div><span class="vis-private"></span>idCitaSeleccionada: <span class="type">String</span></div>
+        <div><span class="vis-private"></span>tablaCalendario / modeloCalendario / txtFechaCalendario</div>
+      </div>
+      <div>
+        <div><span class="vis-private"></span>tablaEspera / modeloEspera / txtEmailEspera</div>
+        <div><span class="vis-private"></span>emailEsperaSeleccionado: <span class="type">String</span></div>
+        <div><span class="vis-private"></span>chkAbierto: <span class="type">JCheckBox[7]</span></div>
+        <div><span class="vis-private"></span>spnInicio, spnFin: <span class="type">JSpinner[7]</span></div>
+      </div>
+    </div>
+    <div class="methods" style="display:flex; gap:36px; flex-wrap:wrap;">
+      <div>
+        <div><span class="vis-public"></span>Interfaz()</div>
+        <div><span class="vis-private"></span>initComponents(): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>crearPanelClientes(): <span class="type">JPanel</span></div>
+        <div><span class="vis-private"></span>crearPanelServicios(): <span class="type">JPanel</span></div>
+        <div><span class="vis-private"></span>crearPanelCitas(): <span class="type">JPanel</span></div>
+        <div><span class="vis-private"></span>crearPanelCalendario(): <span class="type">JPanel</span></div>
+        <div><span class="vis-private"></span>crearPanelEspera(): <span class="type">JPanel</span></div>
+        <div><span class="vis-private"></span>crearPanelHorario(): <span class="type">JPanel</span></div>
+        <div><span class="vis-private"></span>cargarDatosIniciales(): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>actualizarTablaClientes(): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>actualizarTablaServicios(): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>actualizarTablaCitas(): <span class="type">void</span></div>
+      </div>
+      <div>
+        <div><span class="vis-private"></span>actualizarTablaCalendarioHoy(): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>actualizarTablaEspera(): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>limpiarCamposCliente() / Servicio() / Cita()</div>
+        <div><span class="vis-private"></span>seleccionarFilaCliente(email): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>mostrarCitasEnCalendario(citas): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>cargarValoresHorario(): <span class="type">void</span></div>
+        <div><span class="vis-private"></span>enviarNotificacion(idCita, esConfirmacion)</div>
+        <div><span class="vis-private"></span>mostrarExito(mensaje): <span class="type">void</span></div>
+        <div><span class="vis-public"></span><span class="vis-static">main(args: String[]): <span class="type">void</span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== RELACIONES ===================== -->
+  <svg class="lines" viewBox="0 0 1400 1380" preserveAspectRatio="xMinYMin meet">
+    <defs>
+      <marker id="arrow-open" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+        <polyline points="1,1 9,5 1,9" class="arrow-open"/>
+      </marker>
+      <marker id="diamond-filled" markerWidth="12" markerHeight="10" refX="1" refY="5" orient="auto">
+        <polygon points="1,5 6,1 11,5 6,9" class="diamond"/>
+      </marker>
+    </defs>
+
+    <!-- Cita usa a Cliente (1) -->
+    <line x1="400" y1="150" x2="363" y2="150" stroke-width="1.5" marker-end="url(#arrow-open)"/>
+    <text x="366" y="143">1</text>
+    <text x="352" y="170" font-size="9" font-style="italic">cliente</text>
+
+    <!-- Cita usa a TipoServicio (1) -->
+    <line x1="740" y1="150" x2="777" y2="150" stroke-width="1.5" marker-end="url(#arrow-open)"/>
+    <text x="752" y="143">1</text>
+    <text x="736" y="170" font-size="9" font-style="italic">servicio</text>
+
+    <!-- Composicion: Barberia contiene clientes -->
+    <line x1="180" y1="470" x2="180" y2="288" stroke-width="1.5" marker-start="url(#diamond-filled)"/>
+    <text x="188" y="398">clientes 0..*</text>
+    <text x="162" y="464">1</text>
+
+    <!-- Composicion: Barberia contiene citas -->
+    <line x1="540" y1="470" x2="540" y2="361" stroke-width="1.5" marker-start="url(#diamond-filled)"/>
+    <text x="548" y="398">citas 0..*</text>
+    <text x="522" y="464">1</text>
+
+    <!-- Composicion: Barberia contiene tiposServicio -->
+    <line x1="900" y1="470" x2="900" y2="318" stroke-width="1.5" marker-start="url(#diamond-filled)"/>
+    <text x="908" y="398">tiposServicio 0..*</text>
+    <text x="882" y="464">1</text>
+
+    <!-- Composicion: Barberia contiene horario -->
+    <line x1="1240" y1="470" x2="1240" y2="289" stroke-width="1.5" marker-start="url(#diamond-filled)"/>
+    <text x="1248" y="398">horario 1</text>
+    <text x="1222" y="464">1</text>
+
+    <!-- Dependencia: Interfaz usa Barberia -->
+    <line x1="500" y1="910" x2="500" y2="806" stroke-dasharray="6,3" stroke-width="1.3" marker-end="url(#arrow-open)"/>
+    <text x="508" y="862">&laquo;usa&raquo;</text>
+
+    <!-- Dependencia: Barberia envia correo con Correo -->
+    <line x1="960" y1="650" x2="998" y2="650" stroke-dasharray="6,3" stroke-width="1.3" marker-end="url(#arrow-open)"/>
+    <text x="962" y="642">&laquo;env&iacute;a&raquo;</text>
+
+    <!-- Dependencia: Correo habla con el servidor SMTP -->
+    <line x1="1180" y1="731" x2="1180" y2="744" stroke-dasharray="6,3" stroke-width="1.3" marker-end="url(#arrow-open)"/>
+  </svg>
+
+</div>
+</div>
+
+<section class="notes">
+  <h2>Notas de dise&ntilde;o (v4)</h2>
+  <div class="note-grid">
+
+    <div class="note">
+      <h3>Capas</h3>
+      <p><code>logica</code> guarda solo datos y reglas propias de cada objeto. <code>control</code> concentra las validaciones, la persistencia y el correo. <code>interfaz</code> arma la ventana Swing y nunca modifica las listas directamente: todo pasa por <code>Barberia</code>.</p>
+    </div>
+
+    <div class="note">
+      <h3>Persistencia y autoguardado</h3>
+      <p><code>Barberia</code> se serializa en <code>barberia.dat</code> (o <code>state/barberia.dat</code> si la carpeta existe). Adem&aacute;s del guardado al cerrar, <code>autoguardar()</code> escribe en disco despu&eacute;s de cada alta, cambio o borrado; si falla, el mensaje queda en <code>errorGuardado</code> y la interfaz avisa con <code>mostrarExito()</code>.</p>
+    </div>
+
+    <div class="note">
+      <h3>Solapamiento de citas</h3>
+      <p>Cada cita ocupa <code>[hora, hora + duraci&oacute;n del servicio)</code> en minutos. <code>validarSolapamiento()</code> rechaza la cita si su rango se cruza con otra del mismo d&iacute;a; al modificar se excluye la propia cita con <code>idExcluido</code>.</p>
+    </div>
+
+    <div class="note">
+      <h3>Correo SMTP real</h3>
+      <p><code>Correo</code> implementa el protocolo con sockets del JDK: <code>EHLO</code>, <code>STARTTLS</code> (o SSL directo en el 465), <code>AUTH PLAIN</code> con respaldo <code>AUTH LOGIN</code>, <code>MAIL FROM</code>, <code>RCPT TO</code> y <code>DATA</code> con cuerpo UTF-8 en base64. Se configura con variables de entorno o <code>smtp.properties</code>. La confirmaci&oacute;n solo marca la cita como confirmada si el env&iacute;o tuvo &eacute;xito.</p>
+    </div>
+
+    <div class="note">
+      <h3>Cambios frente a v3</h3>
+      <p>Se agregaron <code>Correo</code> y el paquete <code>interfaz</code>, el autoguardado (<code>autoguardar</code>, <code>errorGuardado</code>), el control de solapamiento (<code>validarSolapamiento</code>, <code>formatearHora</code>) y el formato de fecha usado en los correos (<code>FORMATO_FECHA</code>).</p>
+    </div>
+
+    <div class="note">
+      <h3>Reglas de negocio destacadas</h3>
+      <p>El correo del cliente es su llave primaria. No se borra un cliente con citas futuras o en espera, ni un servicio usado en alguna cita. La hora de cierre del horario es exclusiva. Los IDs de citas y servicios salen de consecutivos y no se reutilizan.</p>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <span>
+      <svg viewBox="0 0 46 12"><line x1="2" y1="6" x2="38" y2="6" stroke="var(--line)" stroke-width="1.5"/><polygon points="30,2 40,6 30,10" fill="var(--line)"/></svg>
+      Composici&oacute;n
+    </span>
+    <span>
+      <svg viewBox="0 0 46 12"><line x1="2" y1="6" x2="38" y2="6" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5,3"/><polyline points="31,2 40,6 31,10" fill="none" stroke="var(--line)" stroke-width="1.5"/></svg>
+      Dependencia
+    </span>
+    <span>
+      <svg viewBox="0 0 46 12"><line x1="2" y1="6" x2="38" y2="6" stroke="var(--line)" stroke-width="1.5"/><polyline points="31,2 40,6 31,10" fill="none" stroke="var(--line)" stroke-width="1.5"/></svg>
+      Asociaci&oacute;n dirigida
+    </span>
+    <span>+ p&uacute;blico &nbsp;&middot;&nbsp; - privado &nbsp;&middot;&nbsp; <em>subrayado</em> = est&aacute;tico</span>
+  </div>
+</section>
+
+</body>
+</html>
